@@ -1,0 +1,266 @@
+﻿using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
+
+namespace OpenPlatform_Signature
+{
+
+    public class Signature
+    {
+
+        // 需要填写的内容
+        public static string Client_ID = ""; // 入驻开放平台后，通过并且创建应用完成后，应用的Client_ID（https://open.bilibili.com/company-core）
+        public static string App_Secret = ""; // 入驻开放平台后，通过并且创建应用完成后，应用的App_Secret（https://open.bilibili.com/company-core）
+        public static string ReturnUrl = "";//创建应用后，开发者自行设置的'应用回调域'（https://open.bilibili.com/company-core/{Client_ID}/detail）
+
+
+        // 常量定义
+        internal const string AcceptHeader = "Accept";
+        internal const string AuthorizationHeader = "Authorization";
+        internal const string JsonType = "application/json";
+        internal const string BiliVersion = "2.0";
+        internal const string HmacSha256 = "HMAC-SHA256";
+        internal const string BiliTimestampHeader = "x-bili-timestamp";
+        internal const string BiliSignatureMethodHeader = "x-bili-signature-method";
+        internal const string BiliSignatureNonceHeader = "x-bili-signature-nonce";
+        internal const string BiliAccessKeyIdHeader = "x-bili-accesskeyid";
+        internal const string BiliSignVersionHeader = "x-bili-signature-version";
+        internal const string BiliContentMD5Header = "x-bili-content-md5";
+        internal const string AccessTokenHeader = "access-token";
+
+        // 公共头部类
+        public const bool isTestEnv = false;
+        internal class CommonHeader
+        {
+            internal string Accept { get; set; }
+            internal string Timestamp { get; set; }
+            internal string SignatureMethod { get; set; }
+            internal string SignatureVersion { get; set; }
+            internal string Authorization { get; set; }
+            internal string Nonce { get; set; }
+            internal string AccessKeyId { get; set; }
+            internal string ContentMD5 { get; set; }
+            internal string AccessToken { set; get; }
+
+            // 将所有字段转换为 map
+            internal Dictionary<string, string> ToMap()
+            {
+                return new Dictionary<string, string>
+                {
+                    {BiliTimestampHeader, Timestamp},
+                    {BiliSignatureMethodHeader, SignatureMethod},
+                    {BiliSignatureNonceHeader, Nonce},
+                    {BiliAccessKeyIdHeader, AccessKeyId},
+                    {BiliSignVersionHeader, SignatureVersion},
+                    {BiliContentMD5Header, ContentMD5},
+                    {AuthorizationHeader, Authorization},
+                    {AcceptHeader, Accept},
+                    {AccessTokenHeader, AccessToken}
+                };
+            }
+
+            // 生成需要加密的文本
+            internal string ToSortedString()
+            {
+                var sortedMap = ToMap().Where(kvp => kvp.Key.StartsWith("x-bili-")).OrderBy(kvp => kvp.Key).ToList();
+                StringBuilder sb = new StringBuilder();
+                foreach (var kvp in sortedMap)
+                {
+                    sb.Append($"{kvp.Key}:{kvp.Value}\n");
+                }
+                return sb.ToString().TrimEnd('\n');
+            }
+        }
+
+        // 基础响应类
+        public class BaseResp
+        {
+            public long code { get; set; }
+            public string message { get; set; }
+            public string requestId { get; set; }
+            public string data { get; set; }
+        }
+
+        /// <summary>
+        /// 发起请求
+        /// </summary>
+        /// <param name="InterfaceUrl">接口地址</param>
+        /// <param name="RequestType">get或post二选一，用于进行签名</param>
+        /// <param name="AccessToken">用户授权后，使用授权code兑换的Token</param>
+        /// <param name="reqJson">请求参数的body内容json字符串</param>
+        /// <returns></returns>
+        public static async Task<string> SendRequest(string InterfaceUrl, string RequestType,string AccessToken, string reqJson = "")
+        {
+            var response = await ApiRequest(reqJson, InterfaceUrl, RequestType,AccessToken);
+ 
+            if (response == null)
+            {
+                if (isTestEnv)
+                    Console.WriteLine("请求失败");
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(response))
+                {
+                    try
+                    {
+                        if (isTestEnv)
+                            Console.WriteLine($"\nResponse内容:\n");
+                        // 解析 JSON 字符串到 JsonDocument
+                        using (JsonDocument doc = JsonDocument.Parse(response))
+                        {
+                            // 创建 JsonWriterOptions，设置为格式化输出
+                            JsonWriterOptions options = new JsonWriterOptions
+                            {
+                                Indented = true
+                            };
+
+                            // 创建一个内存流
+                            using (var stream = new System.IO.MemoryStream())
+                            {
+                                // 使用 Utf8JsonWriter 来写入内存流
+                                using (var writer = new Utf8JsonWriter(stream, options))
+                                {
+                                    doc.WriteTo(writer);
+                                }
+
+                                // 将内存流转换为字符串
+                                string formattedJson = System.Text.Encoding.UTF8.GetString(stream.ToArray());
+
+                                // 输出格式化后的 JSON 到终端
+                                if (isTestEnv)
+                                    Console.WriteLine(formattedJson);
+                            }
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        if (isTestEnv)
+                            Console.WriteLine($"\n返回的内容可能不为Json格式，原始内容:\n{response}");
+                    }
+                }
+                else
+                {
+                    if (isTestEnv)
+                        Console.WriteLine($"\nResponse内容为空\n");
+                }
+
+            }
+           return response;
+        }
+
+
+        // HTTP 请求示例方法
+        private static async Task<string> ApiRequest(string reqJson, string InterfaceUrl, string Htpp_Type,string AccessToken="")
+        {
+            if (isTestEnv)
+            {
+                Console.WriteLine($"请求地址：{InterfaceUrl}");
+                Console.WriteLine($"请求类型：{Htpp_Type}");
+                Console.WriteLine($"请求参数：");
+                if (!string.IsNullOrEmpty(reqJson))
+                    Console.WriteLine($"body:\n{reqJson}");
+                else
+                    Console.WriteLine($"body为空\n");
+            }
+            var header = new CommonHeader
+            {
+                Accept = JsonType,
+                Timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(),
+                SignatureMethod = HmacSha256,
+                SignatureVersion = BiliVersion,
+                Authorization = "",
+                Nonce = Guid.NewGuid().ToString(),
+                AccessKeyId = Client_ID,
+                ContentMD5 = Md5(reqJson),
+                AccessToken = AccessToken
+            };
+
+            header.Authorization = CreateSignature(header, App_Secret);
+
+
+            var sortedMap = header.ToMap().OrderBy(kvp => kvp.Key).ToList();
+            if (isTestEnv)
+            {
+                Console.WriteLine($"计算生成的签名：{header.Authorization}\n");
+                Console.WriteLine($"Header信息：\n");
+                foreach (var item in sortedMap)
+                {
+                    Console.WriteLine($"{item.Key}:{item.Value}");
+                }
+                Console.WriteLine();
+            }
+
+
+            using (var client = new HttpClient())
+            {
+                if (Htpp_Type.ToLower() == "post")
+                {
+                    var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{InterfaceUrl}");
+                    foreach (var kvp in header.ToMap())
+                    {
+                        requestMessage.Headers.Add(kvp.Key, kvp.Value);
+                    }
+                    requestMessage.Content = new StringContent(reqJson, Encoding.UTF8, JsonType);
+
+                    var response = await client.SendAsync(requestMessage);
+                    var jsonResponse = await response.Content.ReadAsStringAsync();
+                    return jsonResponse;
+                }
+                else if (Htpp_Type.ToLower() == "get")
+                {
+                    var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{InterfaceUrl}");
+                    requestMessage.Content = new StringContent("", Encoding.UTF8, "application/json");
+                    foreach (var kvp in header.ToMap())
+                    {
+                        requestMessage.Headers.Add(kvp.Key, kvp.Value);
+                    }
+
+                    var response = await client.SendAsync(requestMessage);
+                    var jsonResponse = await response.Content.ReadAsStringAsync();
+                    return jsonResponse;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+
+        // 生成Authorization加密串
+        private static string CreateSignature(CommonHeader header, string accessKeySecret)
+        {
+            var sStr = header.ToSortedString();
+            if (isTestEnv)
+                Console.WriteLine($"\n用于计算签名的字符串：\n{sStr}\n");
+            return HmacSHA256(accessKeySecret, sStr);
+        }
+
+        // MD5加密
+        private static string Md5(string str)
+        {
+            using (var md5 = MD5.Create())
+            {
+                var hash = md5.ComputeHash(Encoding.UTF8.GetBytes(str));
+                return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+            }
+        }
+
+        // HMAC-SHA256算法
+        private static string HmacSHA256(string key, string data)
+        {
+            using (var hmacsha256 = new HMACSHA256(Encoding.UTF8.GetBytes(key)))
+            {
+                var hash = hmacsha256.ComputeHash(Encoding.UTF8.GetBytes(data));
+                return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+            }
+        }
+    }
+
+}
