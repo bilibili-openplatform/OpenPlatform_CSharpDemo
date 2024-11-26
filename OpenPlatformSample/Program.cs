@@ -34,13 +34,13 @@ namespace OpenPlatformSample
         /*-------请将以上内容修改为对应的应用配置信息--------*/
 
 
-
+        //用于读取机密信息的接口对象，生产环境下用户可以自行移除
+        private static IConfigurationRoot Secrest = new ConfigurationBuilder().AddUserSecrets<Program>().Build();
 
         private static string AccessToken = Secrest["AccessToken"];
         private static string OpenId = Secrest["OpenId"];
 
-        //用于读取机密信息的接口对象，生产环境下用户可以自行移除
-        private static IConfigurationRoot Secrest = new ConfigurationBuilder().AddUserSecrets<Program>().Build();
+        
 
         public static void Main(string[] args)
         {
