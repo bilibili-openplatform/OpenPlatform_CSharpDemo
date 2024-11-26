@@ -39,7 +39,7 @@ namespace OpenPlatformSample
         private static string AccessToken = Secrest["AccessToken"];
         private static string OpenId = Secrest["OpenId"];
 
-        //用于读取机密信息的接口对象
+        //用于读取机密信息的接口对象，生产环境下用户可以自行移除
         private static IConfigurationRoot Secrest = new ConfigurationBuilder().AddUserSecrets<Program>().Build();
 
         public static void Main(string[] args)
@@ -47,7 +47,7 @@ namespace OpenPlatformSample
             //初始化，必须最先启动，不能删除
             Init();
 
-            //账号授权
+            //账号授权（包含网页应用唤起，签名，授权，换取token）
             AccountAuthorization();
 
             //直播能力-获取直播长连消息
