@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -95,10 +96,11 @@ namespace OpenPlatform_Signature
         /// <param name="AccessToken">用户授权后，使用授权code兑换的Token</param>
         /// <param name="reqJson">请求参数的body内容json字符串</param>
         /// <returns></returns>
-        public static async Task<string> SendRequest(string InterfaceUrl, string RequestType,string AccessToken, string reqJson = "")
+        public static async Task<string> SendRequest(string InterfaceUrl, string RequestType, string AccessToken, string reqJson = "")
         {
-            var response = await ApiRequest(reqJson, InterfaceUrl, RequestType,AccessToken);
- 
+
+
+            var response = await ApiRequest(reqJson, InterfaceUrl, RequestType, AccessToken);
             if (response == null)
             {
                 if (isTestEnv)
@@ -110,6 +112,8 @@ namespace OpenPlatform_Signature
                 {
                     try
                     {
+                        if (JObject.Parse(response)?["code"]?.ToString() != "0")
+                            Console.WriteLine($"请求{InterfaceUrl}出现错误：\n{JObject.Parse(response)?["code"]?.ToString()}:{JObject.Parse(response)?["message"]?.ToString()}");
                         if (isTestEnv)
                             Console.WriteLine($"\nResponse内容:\n");
                         // 解析 JSON 字符串到 JsonDocument
@@ -133,9 +137,14 @@ namespace OpenPlatform_Signature
                                 // 将内存流转换为字符串
                                 string formattedJson = System.Text.Encoding.UTF8.GetString(stream.ToArray());
 
+                                // 重新序列化以确保汉字不被转义
+                                var jsonObject = System.Text.Json.JsonSerializer.Deserialize<object>(formattedJson);
+                                string finalOutput = System.Text.Json.JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
+
+
                                 // 输出格式化后的 JSON 到终端
                                 if (isTestEnv)
-                                    Console.WriteLine(formattedJson);
+                                    Console.WriteLine(finalOutput);
                             }
                         }
                     }
@@ -152,12 +161,12 @@ namespace OpenPlatform_Signature
                 }
 
             }
-           return response;
+            return response;
         }
 
 
         // HTTP 请求示例方法
-        private static async Task<string> ApiRequest(string reqJson, string InterfaceUrl, string Htpp_Type,string AccessToken="")
+        private static async Task<string> ApiRequest(string reqJson, string InterfaceUrl, string Htpp_Type, string AccessToken = "")
         {
             if (isTestEnv)
             {
