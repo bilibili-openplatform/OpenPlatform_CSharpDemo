@@ -63,8 +63,11 @@ namespace OpenPlatformSample
             ////用户管理-查询用户已授权权限列表
             //GetScopes();
 
-            //视频能力-查询单一视频稿件详情
-            GetViewInfo();
+            ////视频能力-查询单一视频稿件详情
+            //GetViewInfo();
+
+            ////视频能力-查询当前用户稿件列表
+            //GetArchiveViewList();
 
             while (true)
             {
@@ -146,7 +149,7 @@ namespace OpenPlatformSample
         /// <summary>
         /// 查询单一视频稿件详情
         /// </summary>
-        public static void GetViewInfo()
+        public static void GetArchiveView()
         {
             var requestParameters = new Dictionary<string, string?>
             {
@@ -159,6 +162,7 @@ namespace OpenPlatformSample
                 .ToArray();
 
             var queryString = string.Join("&", queryParams);
+            //https://open.bilibili.com/doc/4/d9554788-dcef-f139-6217-b487d41c3826
             var url = $"{Domain}/arcopen/fn/archive/view?{queryString}";
 
             var resp = Signature.SendRequest(url, "GET", AccessToken).Result;
@@ -167,6 +171,35 @@ namespace OpenPlatformSample
                 WriteLog(resp);
             }
         }
+
+        /// <summary>
+        /// 查询当前用户稿件列表
+        /// </summary>
+        public static void GetArchiveViewList()
+        {
+            var requestParameters = new Dictionary<string, string?>
+            {
+                { "pn", "1" },
+                { "ps", "20" },
+                { "status", "all" }
+            };
+
+            var queryParams = requestParameters
+                .Where(kvp => kvp.Value != null)
+                .Select(kvp => $"{kvp.Key}={kvp.Value}")
+                .ToArray();
+
+            var queryString = string.Join("&", queryParams);
+            //https://open.bilibili.com/doc/4/a24030b7-6b8f-b36c-32d8-a4aae67fcc35
+            var url = $"{Domain}/arcopen/fn/archive/viewlist?{queryString}";
+
+            var resp = Signature.SendRequest(url, "GET", AccessToken).Result;
+            if (JObject.Parse(resp)?["code"]?.ToString() == "0")
+            {
+                WriteLog(resp);
+            }
+        }
+
 
 
         private static void WriteLog(string response)
@@ -200,7 +233,5 @@ namespace OpenPlatformSample
                 }
             }
         }
-
-
     }
 }
