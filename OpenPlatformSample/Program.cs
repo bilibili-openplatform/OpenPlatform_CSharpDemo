@@ -41,6 +41,8 @@ namespace OpenPlatformSample
         private static string AccessToken = Secrest["AccessToken"];
         private static string OpenId = Secrest["OpenId"];
 
+        private static string Domain = "https://member.bilibili.com";
+
 
 
         public static void Main(string[] args)
@@ -57,6 +59,8 @@ namespace OpenPlatformSample
             //直播能力-获取直播间基础信息
             //GetRoomInfo();
 
+            //用户管理-查询用户已授权权限列表
+            GetScopes();
 
             while (true)
             {
@@ -76,9 +80,9 @@ namespace OpenPlatformSample
             }
             if (string.IsNullOrEmpty(OpenId))
             {
-                ////https://open.bilibili.com/doc/4/feb66f99-7d87-c206-00e7-d84164cd701c
-                string resp = Signature.SendRequest("https://member.bilibili.com/arcopen/fn/user/account/info", "GET", AccessToken).Result;
-                OpenId = JObject.Parse(resp)?["data"]?["openid"]?.ToString();
+                //https://open.bilibili.com/doc/4/feb66f99-7d87-c206-00e7-d84164cd701c
+                string resp = Signature.SendRequest($"{Domain}/arcopen/fn/user/account/info", "GET", AccessToken).Result;
+                OpenId = JObject.Parse(resp)?["data"]?["openid"]?.ToString();//授权账号的open_id
             }
         }
 
@@ -90,7 +94,7 @@ namespace OpenPlatformSample
         {
             (string open_id, long room_id, string title, bool is_streaming, bool is_banned) info = new();
             //https://open.bilibili.com/doc/4/67eaa648-3f67-f2bc-0fac-efa5fb922305
-            string resp = Signature.SendRequest("https://member.bilibili.com/arcopen/fn/live/room/info", "GET", AccessToken).Result;
+            string resp = Signature.SendRequest($"{Domain}/arcopen/fn/live/room/info", "GET", AccessToken).Result;
             info.open_id = JObject.Parse(resp)?["data"]?["open_id"]?.ToString();//主播的open_id
             long.TryParse(JObject.Parse(resp)?["data"]?["room_id"]?.ToString(), out info.room_id);//房间号
             info.title = JObject.Parse(resp)?["data"]?["title"]?.ToString();//直播间标题
@@ -99,6 +103,26 @@ namespace OpenPlatformSample
             return info;
         }
 
+        /// <summary>
+        /// 查询用户已授权权限列表
+        /// </summary>
+        /// <returns></returns>
+        public static (string open_id,List<string>scopes) GetScopes()
+        {
+            (string open_id,List<string>scopes) info = new() { scopes = new()};
+            //https://open.bilibili.com/doc/4/08f935c5-29f1-e646-85a3-0b11c2830558
+            string resp = Signature.SendRequest($"{Domain}/arcopen/fn/user/account/scopes", "GET", AccessToken).Result;
+            info.open_id = JObject.Parse(resp)?["data"]?["open_id"]?.ToString();//主播的open_id
+            var itemesArray = JObject.Parse(resp)?["data"]?["scopes"] as JArray;
+            if(itemesArray!=null)
+            {
+                foreach (var item in itemesArray)
+                {
+                    info.scopes.Add(item.ToString());
+                }
+            }
+            return info;
+        }
 
     }
 }
