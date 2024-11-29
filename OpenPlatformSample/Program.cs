@@ -10,6 +10,7 @@ using System.Text;
 using OpenPlatform_Signature;
 using System.Diagnostics;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json.Linq;
 
 namespace OpenPlatformSample
 {
@@ -40,7 +41,7 @@ namespace OpenPlatformSample
         private static string AccessToken = Secrest["AccessToken"];
         private static string OpenId = Secrest["OpenId"];
 
-        
+
 
         public static void Main(string[] args)
         {
@@ -51,7 +52,10 @@ namespace OpenPlatformSample
             AccountAuthorization();
 
             //直播能力-获取直播长连消息
-            Live.Live.Start(AccessToken);
+            //Live.Live.Start(AccessToken);
+
+            //直播能力-获取直播间基础信息
+            //GetRoomInfo();
 
 
             while (true)
@@ -59,7 +63,6 @@ namespace OpenPlatformSample
                 Console.ReadKey();
             }
         }
-
 
 
         /// <summary>
@@ -73,9 +76,27 @@ namespace OpenPlatformSample
             }
             if (string.IsNullOrEmpty(OpenId))
             {
-                var info = OpenPlatform_UserInfo.info.GetInfo(AccessToken);//获取用户公开信息(https://open.bilibili.com/doc/4/feb66f99-7d87-c206-00e7-d84164cd701c)
-                OpenId = info.openid;
+                ////https://open.bilibili.com/doc/4/feb66f99-7d87-c206-00e7-d84164cd701c
+                string resp = Signature.SendRequest("https://member.bilibili.com/arcopen/fn/user/account/info", "GET", AccessToken).Result;
+                OpenId = JObject.Parse(resp)?["data"]?["openid"]?.ToString();
             }
+        }
+
+        /// <summary>
+        /// 获取直播间基础信息
+        /// </summary>
+        /// <returns></returns>
+        public static (string open_id, long room_id, string title, bool is_streaming, bool is_banned) GetRoomInfo()
+        {
+            (string open_id, long room_id, string title, bool is_streaming, bool is_banned) info = new();
+            //https://open.bilibili.com/doc/4/67eaa648-3f67-f2bc-0fac-efa5fb922305
+            string resp = Signature.SendRequest("https://member.bilibili.com/arcopen/fn/live/room/info", "GET", AccessToken).Result;
+            info.open_id = JObject.Parse(resp)?["data"]?["open_id"]?.ToString();//主播的open_id
+            long.TryParse(JObject.Parse(resp)?["data"]?["room_id"]?.ToString(), out info.room_id);//房间号
+            info.title = JObject.Parse(resp)?["data"]?["title"]?.ToString();//直播间标题
+            bool.TryParse(JObject.Parse(resp)?["data"]?["is_streaming"]?.ToString(), out info.is_streaming);//当前是否开播
+            bool.TryParse(JObject.Parse(resp)?["data"]?["is_banned"]?.ToString(), out info.is_banned);//当前房间是否被封禁
+            return info;
         }
 
 

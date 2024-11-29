@@ -25,7 +25,6 @@
   <ItemGroup>
     <ProjectReference Include="..\OpenPlatform_Authorization\OpenPlatform_Authorization.csproj" />
     <ProjectReference Include="..\OpenPlatform_Live\OpenPlatform_LiveRoomData.csproj" />
-    <ProjectReference Include="..\OpenPlatform_UserInfo\OpenPlatform_UserInfo.csproj" />
     <ProjectReference Include="..\Signature\Signature\OpenPlatform_Signature.csproj" />
   </ItemGroup>
 </Project>

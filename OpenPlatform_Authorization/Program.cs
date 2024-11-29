@@ -17,8 +17,7 @@ namespace OpenPlatform_Authorization
         public static string GetAccessToken()
         {
             #region 授权
-            //授权可查看文档：https://open.bilibili.com/doc/4/eaf0e2b5-bde9-b9a0-9be1-019bb455701c
-
+            //https://open.bilibili.com/doc/4/eaf0e2b5-bde9-b9a0-9be1-019bb455701c
             string toAuthorizationUrl = $"https://passport.bilibili.com/register/pc_oauth2.html#/?client_id={Client_ID}&return_url={ReturnUrl}&response_type=code&state=TestDemo";
             Process.Start(new ProcessStartInfo
             {
