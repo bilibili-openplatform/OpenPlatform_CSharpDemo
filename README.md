@@ -83,6 +83,9 @@
 
 ## 快速复用鉴权内容
 - 本Demo项目中使用了VS2022总`用户机密`进行敏感信息管理，如需快捷复用基础信息，可以在机密信息中填写内容方便使用。
+![f8cbf27278a31d9d76b63a67f176e43e](https://github.com/user-attachments/assets/845f772a-8dc2-4c01-8d61-0d6e5b785f2a)
+
+
 - secrets.json示例内容：
 ```json
 {
