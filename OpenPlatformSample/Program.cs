@@ -42,8 +42,7 @@ namespace OpenPlatformSample
         private static string AccessToken = Secrest["AccessToken"];
         private static string OpenId = Secrest["OpenId"];
 
-        private static string Domain = "https://member.bilibili.com";
-
+        private const string Domain = "https://member.bilibili.com";
 
 
         public static void Main(string[] args)
@@ -51,27 +50,72 @@ namespace OpenPlatformSample
             //初始化，必须最先启动，不能删除
             Init();
 
-            //账号授权（包含网页应用唤起，签名，授权，换取token）
-            AccountAuthorization();
-
-            ////直播能力-获取直播长连消息
-            //Live.Live.Start(AccessToken);
-
-            ////直播能力-获取直播间基础信息
-            //GetRoomInfo();
-
-            ////用户管理-查询用户已授权权限列表
-            //GetScopes();
-
-            ////视频能力-查询单一视频稿件详情
-            //GetViewInfo();
-
-            ////视频能力-查询当前用户稿件列表
-            //GetArchiveViewList();
 
             while (true)
             {
-                Console.ReadKey();
+                Console.WriteLine();
+                
+                Console.WriteLine("1.账号授权");
+                Console.WriteLine("2.直播能力-获取直播长连消息");
+                Console.WriteLine("3.直播能力-获取直播间基础信息");
+                Console.WriteLine("4.用户管理-查询用户已授权权限列表");
+                Console.WriteLine("5.视频能力-查询单一视频稿件详情");
+                Console.WriteLine("6.视频能力-查询当前用户稿件列表");
+                Console.WriteLine("7.三方一键开播-获取第三方开播授权链接");
+                Console.Write("输入编号选择执行的demo功能：");
+                string code = Console.ReadLine();
+                Console.WriteLine("\r执行结果:");
+                selectFunction(code);
+            }
+        }
+
+        public static void selectFunction(string code)
+        {
+            if (code != "1" && string.IsNullOrEmpty(AccessToken))
+            {
+                Console.WriteLine("请先进行账号授权兑换token");
+                return;
+            }
+            switch (code)
+            {
+                //账号授权（包含网页应用唤起，签名，授权，换取token）
+                case "1":
+                    AccountAuthorization();
+                    break;
+                //直播能力-获取直播长连消息
+                case "2":
+                    Live.Live.Start(AccessToken);
+                    break;
+                //直播能力-获取直播间基础信息
+                case "3":
+                    GetRoomInfo();
+                    break;
+                //用户管理-查询用户已授权权限列表
+                case "4":
+                    GetScopes();
+                    break;
+                //视频能力-查询单一视频稿件详情
+                case "5":
+                    GetArchiveView();
+                    break;
+                //视频能力-查询当前用户稿件列表
+                case "6":
+                    GetArchiveViewList();
+                    break;
+                //三方一键开播-获取第三方开播授权链接
+                case "7":
+                    ThirdPartyLive_ObtainAuthorizedConnection();
+                    break;
+                case "8":
+                    break;
+                case "9":
+                    break;
+                case "10":
+                    break;
+                case "11":
+                    break;
+                case "12":
+                    break;
             }
         }
 
@@ -192,6 +236,35 @@ namespace OpenPlatformSample
             var queryString = string.Join("&", queryParams);
             //https://open.bilibili.com/doc/4/a24030b7-6b8f-b36c-32d8-a4aae67fcc35
             var url = $"{Domain}/arcopen/fn/archive/viewlist?{queryString}";
+
+            var resp = Signature.SendRequest(url, "GET", AccessToken).Result;
+            if (JObject.Parse(resp)?["code"]?.ToString() == "0")
+            {
+                WriteLog(resp);
+            }
+        }
+
+        /// <summary>
+        /// 获取第三方开播授权链接
+        /// </summary>
+        public static void ThirdPartyLive_ObtainAuthorizedConnection()
+        {
+            var requestParameters = new Dictionary<string, string?>
+            {
+                { "biz_code", "openplatform_demo" },
+                { "open_id", OpenId },
+                { "live_area_id", "816" },
+                { "third_live_uuid",Guid.NewGuid().ToString()}
+            };
+
+            var queryParams = requestParameters
+                .Where(kvp => kvp.Value != null)
+                .Select(kvp => $"{kvp.Key}={kvp.Value}")
+                .ToArray();
+
+            var queryString = string.Join("&", queryParams);
+            //https://open.bilibili.com/doc/4/5827c4a4-aab6-235e-624b-a47248d712e3
+            var url = $"{Domain}/liveopen/fn/live/thirdPartyLive/grantUrl?{queryString}";
 
             var resp = Signature.SendRequest(url, "GET", AccessToken).Result;
             if (JObject.Parse(resp)?["code"]?.ToString() == "0")

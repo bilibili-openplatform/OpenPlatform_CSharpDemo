@@ -80,3 +80,18 @@
         }
 ```
 然后根据需要，使用Sample中Main里的各项功能，**请注意，请根据自己的需求选择对应的函数启动，默认情况下，所有函数都在Main中，可能会造成冲突以及流程过长**
+
+## 快速复用鉴权内容
+- 本Demo项目中使用了VS2022总`用户机密`进行敏感信息管理，如需快捷复用基础信息，可以在机密信息中填写内容方便使用。
+- secrets.json示例内容：
+```json
+{
+  "AccessToken": "",//用户授权后使用code兑换的token信息
+  "OpenId": "",//使用token查询到的该用户的open_id
+  "Client_ID": "",//应用的Client_ID
+  "App_Secret": "",//应用的App_Secret
+  "ReturnUrl": "",//应用配置的'应用回调域'
+  "resource_id": ""//方便用于查询，对应open_id用户名下的稿件BV号
+}
+```
+

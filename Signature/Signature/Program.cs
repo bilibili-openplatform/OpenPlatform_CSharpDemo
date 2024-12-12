@@ -113,7 +113,7 @@ namespace OpenPlatform_Signature
                     try
                     {
                         if (JObject.Parse(response)?["code"]?.ToString() != "0")
-                            Console.WriteLine($"请求{InterfaceUrl}出现错误：\n{JObject.Parse(response)?["code"]?.ToString()}:{JObject.Parse(response)?["message"]?.ToString()}");
+                            Console.WriteLine($"网络请求出现错误：请求的接口URL为：\n{InterfaceUrl}\ncode和message为：\n{JObject.Parse(response)?["code"]?.ToString()}:{JObject.Parse(response)?["message"]?.ToString()}");
                         if (isTestEnv)
                             Console.WriteLine($"\nResponse内容:\n");
                         // 解析 JSON 字符串到 JsonDocument
