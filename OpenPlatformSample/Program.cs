@@ -12,6 +12,9 @@ using System.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
 using System.Text.Json;
+using System.Net.Http.Headers;
+using System;
+using System.Xml.Linq;
 
 namespace OpenPlatformSample
 {
@@ -42,7 +45,8 @@ namespace OpenPlatformSample
         private static string AccessToken = Secrest["AccessToken"];
         private static string OpenId = Secrest["OpenId"];
 
-        private const string Domain = "https://member.bilibili.com";
+        private const string MainDomain = "https://member.bilibili.com";
+        private const string VideoDomain = "https://openupos.bilivideo.com";
 
 
         public static void Main(string[] args)
@@ -51,10 +55,12 @@ namespace OpenPlatformSample
             Init();
 
 
+
+
             while (true)
             {
                 Console.WriteLine();
-                
+
                 Console.WriteLine("1.账号授权");
                 Console.WriteLine("2.直播能力-获取直播长连消息");
                 Console.WriteLine("3.直播能力-获取直播间基础信息");
@@ -62,6 +68,11 @@ namespace OpenPlatformSample
                 Console.WriteLine("5.视频能力-查询单一视频稿件详情");
                 Console.WriteLine("6.视频能力-查询当前用户稿件列表");
                 Console.WriteLine("7.三方一键开播-获取第三方开播授权链接");
+                Console.WriteLine("8.获取投稿分区列表");
+                Console.WriteLine("9.视频稿件上传预处理");
+                Console.WriteLine("10.单个小文件视频上传");
+                Console.WriteLine("11.上传稿件封面");
+                Console.WriteLine("12.视频稿件提交");
                 Console.Write("输入编号选择执行的demo功能：");
                 string code = Console.ReadLine();
                 Console.WriteLine("\r执行结果:");
@@ -106,15 +117,53 @@ namespace OpenPlatformSample
                 case "7":
                     ThirdPartyLive_ObtainAuthorizedConnection();
                     break;
+                //获取投稿分区列表
                 case "8":
+                    GetPartitionList();
                     break;
+                //视频稿件上传预处理
                 case "9":
+                    Console.WriteLine("请输入文件名称：");
+                    string name = Console.ReadLine();
+                    Console.WriteLine("请输入上传类型：0-多分片，1-单个小文件（不超过100M）：");
+                    string utype = Console.ReadLine();
+                    VideoManuscriptUploadPreprocess(name, utype);
                     break;
+                //单个小文件视频上传
                 case "10":
+                    Console.WriteLine("请输入预处理授权token：");
+                    string upload_token = Console.ReadLine();
+                    Console.WriteLine("请输入文件路径：");
+                    string FilePath = Console.ReadLine();
+                    UploadSingleShortVideoFileAsync(upload_token, FilePath);
                     break;
+                //上传稿件封面
                 case "11":
+                    Console.WriteLine("请输入封面文件路径：");
+                    string coverFilePath = Console.ReadLine();
+                    VideoManuscriptCoverUpload(coverFilePath);
                     break;
+                //视频稿件提交
                 case "12":
+                    Console.WriteLine("请输入视频上传预处理授权token：");
+                    string uploadToken = Console.ReadLine();
+                    Console.WriteLine("请输入标题：");
+                    string title = Console.ReadLine();
+                    Console.WriteLine("请输入通过接口上传返回的封面url：");
+                    string cover = Console.ReadLine();
+                    Console.WriteLine("请输入稿件分区id：");
+                    int tid = int.Parse(Console.ReadLine());
+                    Console.WriteLine("请输入视频标签，多个标签用半角逗号分割：");
+                    string tag = Console.ReadLine();
+                    Console.WriteLine("请输入版权：1-原创 2-转载：");
+                    int copyRight = int.Parse(Console.ReadLine());
+                    string source = string.Empty;
+                    if (copyRight == 2)
+                    {
+                        Console.WriteLine("请输入原始稿件来源：");
+                        source = Console.ReadLine();
+                    }
+                    VideoManuscriptSubmission(uploadToken, title, cover, tid, tag, copyRight, source);
                     break;
             }
         }
@@ -132,7 +181,7 @@ namespace OpenPlatformSample
             if (string.IsNullOrEmpty(OpenId))
             {
                 //https://open.bilibili.com/doc/4/feb66f99-7d87-c206-00e7-d84164cd701c
-                var url = $"{Domain}/arcopen/fn/user/account/info";
+                var url = $"{MainDomain}/arcopen/fn/user/account/info";
                 var resp = Signature.SendRequest(url, "GET", AccessToken).Result;
                 if (JObject.Parse(resp)?["code"]?.ToString() == "0")
                 {
@@ -150,7 +199,7 @@ namespace OpenPlatformSample
         {
             (string open_id, long room_id, string title, bool is_streaming, bool is_banned) info = new();
             //https://open.bilibili.com/doc/4/67eaa648-3f67-f2bc-0fac-efa5fb922305
-            var url = $"{Domain}/arcopen/fn/live/room/info";
+            var url = $"{MainDomain}/arcopen/fn/live/room/info";
             var resp = Signature.SendRequest(url, "GET", AccessToken).Result;
             if (JObject.Parse(resp)?["code"]?.ToString() == "0")
             {
@@ -171,7 +220,7 @@ namespace OpenPlatformSample
         {
             (string open_id, List<string> scopes) info = new() { scopes = new() };
             //https://open.bilibili.com/doc/4/08f935c5-29f1-e646-85a3-0b11c2830558
-            var url = $"{Domain}/arcopen/fn/user/account/scopes";
+            var url = $"{MainDomain}/arcopen/fn/user/account/scopes";
 
             var resp = Signature.SendRequest(url, "GET", AccessToken).Result;
             if (JObject.Parse(resp)?["code"]?.ToString() == "0")
@@ -207,7 +256,7 @@ namespace OpenPlatformSample
 
             var queryString = string.Join("&", queryParams);
             //https://open.bilibili.com/doc/4/d9554788-dcef-f139-6217-b487d41c3826
-            var url = $"{Domain}/arcopen/fn/archive/view?{queryString}";
+            var url = $"{MainDomain}/arcopen/fn/archive/view?{queryString}";
 
             var resp = Signature.SendRequest(url, "GET", AccessToken).Result;
             if (JObject.Parse(resp)?["code"]?.ToString() == "0")
@@ -235,7 +284,7 @@ namespace OpenPlatformSample
 
             var queryString = string.Join("&", queryParams);
             //https://open.bilibili.com/doc/4/a24030b7-6b8f-b36c-32d8-a4aae67fcc35
-            var url = $"{Domain}/arcopen/fn/archive/viewlist?{queryString}";
+            var url = $"{MainDomain}/arcopen/fn/archive/viewlist?{queryString}";
 
             var resp = Signature.SendRequest(url, "GET", AccessToken).Result;
             if (JObject.Parse(resp)?["code"]?.ToString() == "0")
@@ -254,7 +303,7 @@ namespace OpenPlatformSample
                 { "biz_code", "openplatform_demo" },
                 { "open_id", OpenId },
                 { "live_area_id", "816" },
-                { "third_live_uuid",Guid.NewGuid().ToString()}
+                { "third_live_uuid",Guid.NewGuid().ToString("N").Substring(0,31)}
             };
 
             var queryParams = requestParameters
@@ -264,7 +313,7 @@ namespace OpenPlatformSample
 
             var queryString = string.Join("&", queryParams);
             //https://open.bilibili.com/doc/4/5827c4a4-aab6-235e-624b-a47248d712e3
-            var url = $"{Domain}/liveopen/fn/live/thirdPartyLive/grantUrl?{queryString}";
+            var url = $"{MainDomain}/liveopen/fn/live/thirdPartyLive/grantUrl?{queryString}";
 
             var resp = Signature.SendRequest(url, "GET", AccessToken).Result;
             if (JObject.Parse(resp)?["code"]?.ToString() == "0")
@@ -273,6 +322,115 @@ namespace OpenPlatformSample
             }
         }
 
+
+        /// <summary>
+        /// 获取投稿分区列表
+        /// </summary>
+        /// <returns></returns>
+        public static void GetPartitionList()
+        {
+            //https://open.bilibili.com/doc/4/4f13299b-5316-142f-df6a-87313eaf85a9
+            var url = $"{MainDomain}/arcopen/fn/archive/type/list";
+            var resp = Signature.SendRequest(url, "GET", AccessToken).Result;
+            if (JObject.Parse(resp)?["code"]?.ToString() == "0")
+            {
+                WriteLog(resp);
+            }
+        }
+
+        /// <summary>
+        /// 视频稿件上传预处理
+        /// </summary>
+        /// <param name="name">文件名称，需要包含拓展名(例如test.mp4)</param>
+        /// <param name="utype">上传类型：0，1。0-多分片，1-单个小文件（不超过100M）</param>
+        public static void VideoManuscriptUploadPreprocess(string name, string utype)
+        {
+            var requestParameters = new Dictionary<string, string?>
+            {
+                { "name", name },
+                { "utype", utype }
+            };
+            //https://open.bilibili.com/doc/4/0c532c6a-e6fb-0aff-8021-905ae2409095
+            var url = $"{MainDomain}/arcopen/fn/archive/video/init";
+            var reqJson = JsonConvert.SerializeObject(requestParameters);
+            var resp = Signature.SendRequest(url, "POST", AccessToken, reqJson).Result;
+            if (JObject.Parse(resp)?["code"]?.ToString() == "0")
+            {
+                WriteLog(resp);
+            }
+        }
+
+        /// <summary>
+        /// 上传稿件封面
+        /// </summary>
+        /// <param name="FilePath">封面文件路径</param>
+        public static void VideoManuscriptCoverUpload(string FilePath)
+        {
+            var url = $"{MainDomain}/arcopen/fn/archive/cover/upload";
+            var resp = Signature.SendRequest(url, "POST", AccessToken, "", FilePath).Result;
+            if (JObject.Parse(resp)?["code"]?.ToString() == "0")
+            {
+                WriteLog(resp);
+            }
+        }
+
+        /// <summary>
+        /// 单个小文件视频上传
+        /// </summary>
+        /// <param name="upload_token">视频稿件上传预处理获得的授权token</param>
+        /// <param name="FilePath">要上传的文件路径</param>
+        /// <returns></returns>
+        public static async Task UploadSingleShortVideoFileAsync(string upload_token, string FilePath)
+        {
+            string url = $"{VideoDomain}/video/v2/upload?upload_token={upload_token}";
+            using (HttpClient client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+                using (FileStream fileStream = new FileStream(FilePath, FileMode.Open, FileAccess.Read))
+                {
+                    var content = new StreamContent(fileStream);
+
+                    HttpResponseMessage response = await client.PostAsync(url, content);
+                    string resp = await response.Content.ReadAsStringAsync();
+                    WriteLog(resp);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 视频稿件提交
+        /// </summary>
+        /// <param name="upload_token">视频上传预处理授权</param>
+        /// <param name="title">标题</param>
+        /// <param name="cover">封面</param>
+        /// <param name="tid">稿件分区id</param>
+        /// <param name="tag">视频标签，多个标签用半角逗号分割</param>
+        /// <param name="copyright">1-原创 2-转载</param>
+        /// <param name="source">转载时必填，原始稿件来源</param>
+        public static void VideoManuscriptSubmission(string upload_token, string title, string cover, int tid, string tag, int copyright, string source)
+        {
+            var requestParameters = new Dictionary<string, object?>
+            {
+                { "title", title },
+                { "cover", cover},
+                { "tid", tid },
+                { "tag", tag},
+                { "copyright", copyright}
+            };
+            if (copyright == 2)
+            {
+                requestParameters.Add("source", source);
+            }
+            //https://open.bilibili.com/doc/4/f7fc57dd-55a1-5cb1-cba4-61fb2994bf0f
+            var url = $"{MainDomain}/arcopen/fn/archive/add-by-utoken?upload_token={upload_token}";
+            var reqJson = JsonConvert.SerializeObject(requestParameters);
+            var resp = Signature.SendRequest(url, "POST", AccessToken, reqJson).Result;
+            if (JObject.Parse(resp)?["code"]?.ToString() == "0")
+            {
+                WriteLog(resp);
+            }
+        }
 
 
         private static void WriteLog(string response)

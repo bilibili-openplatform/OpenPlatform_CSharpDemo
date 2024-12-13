@@ -4,6 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Reflection.Metadata;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -95,16 +97,14 @@ namespace OpenPlatform_Signature
         /// <param name="RequestType">get或post二选一，用于进行签名</param>
         /// <param name="AccessToken">用户授权后，使用授权code兑换的Token</param>
         /// <param name="reqJson">请求参数的body内容json字符串</param>
+        /// <param name="filePath">如果需要上传文件，那么文件路径</param>
         /// <returns></returns>
-        public static async Task<string> SendRequest(string InterfaceUrl, string RequestType, string AccessToken, string reqJson = "")
+        public static async Task<string> SendRequest(string InterfaceUrl, string RequestType, string AccessToken, string reqJson = "",string filePath = "")
         {
-
-
-            var response = await ApiRequest(reqJson, InterfaceUrl, RequestType, AccessToken);
+            var response = await ApiRequest(reqJson, InterfaceUrl, RequestType, AccessToken, filePath);
             if (response == null)
             {
-                if (isTestEnv)
-                    Console.WriteLine("请求失败");
+                    Console.WriteLine("请求失败，网络信息返回为空");
             }
             else
             {
@@ -113,7 +113,7 @@ namespace OpenPlatform_Signature
                     try
                     {
                         if (JObject.Parse(response)?["code"]?.ToString() != "0")
-                            Console.WriteLine($"网络请求出现错误：请求的接口URL为：\n{InterfaceUrl}\ncode和message为：\n{JObject.Parse(response)?["code"]?.ToString()}:{JObject.Parse(response)?["message"]?.ToString()}");
+                            Console.WriteLine($"网络请求出现错误：请求的接口URL为：\n{InterfaceUrl}\ncode：{JObject.Parse(response)?["code"]?.ToString()}\nmessage：{JObject.Parse(response)?["message"]?.ToString()}\nrequest_id：{JObject.Parse(response)?["request_id"]?.ToString()}");
                         if (isTestEnv)
                             Console.WriteLine($"\nResponse内容:\n");
                         // 解析 JSON 字符串到 JsonDocument
@@ -166,7 +166,7 @@ namespace OpenPlatform_Signature
 
 
         // HTTP 请求示例方法
-        private static async Task<string> ApiRequest(string reqJson, string InterfaceUrl, string Htpp_Type, string AccessToken = "")
+        private static async Task<string> ApiRequest(string reqJson, string InterfaceUrl, string Htpp_Type, string AccessToken = "",string filePath = "")
         {
             if (isTestEnv)
             {
@@ -195,6 +195,12 @@ namespace OpenPlatform_Signature
 
 
             var sortedMap = header.ToMap().OrderBy(kvp => kvp.Key).ToList();
+            Console.WriteLine($"Header信息：\n");
+            foreach (var item in sortedMap)
+            {
+                Console.WriteLine($"{item.Key} = {item.Value}");
+            }
+            Console.WriteLine();
             if (isTestEnv)
             {
                 Console.WriteLine($"计算生成的签名：{header.Authorization}\n");
@@ -211,16 +217,40 @@ namespace OpenPlatform_Signature
             {
                 if (Htpp_Type.ToLower() == "post")
                 {
+
                     var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{InterfaceUrl}");
                     foreach (var kvp in header.ToMap())
                     {
                         requestMessage.Headers.Add(kvp.Key, kvp.Value);
                     }
-                    requestMessage.Content = new StringContent(reqJson, Encoding.UTF8, JsonType);
+                    if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
+                    {
+                        var content = new MultipartFormDataContent();
+                        var fileContent = new ByteArrayContent(File.ReadAllBytes(filePath));
+                        fileContent.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data")
+                        {
+                            Name = "\"file\"",
+                            FileName = "\"" + Path.GetFileName(filePath) + "\""
+                        };
+                        fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/octet-stream");
+                        content.Add(fileContent);
 
+                        if (!string.IsNullOrEmpty(reqJson))
+                        {
+                            var jsonContent = new StringContent(reqJson, Encoding.UTF8, JsonType);
+                            content.Add(jsonContent, "json");
+                        }
+                        requestMessage.Content = content;
+                    }
+                    else
+                    {
+                        requestMessage.Content = new StringContent(reqJson, Encoding.UTF8, JsonType);
+                    }
                     var response = await client.SendAsync(requestMessage);
                     var jsonResponse = await response.Content.ReadAsStringAsync();
                     return jsonResponse;
+
+
                 }
                 else if (Htpp_Type.ToLower() == "get")
                 {
@@ -230,7 +260,6 @@ namespace OpenPlatform_Signature
                     {
                         requestMessage.Headers.Add(kvp.Key, kvp.Value);
                     }
-
                     var response = await client.SendAsync(requestMessage);
                     var jsonResponse = await response.Content.ReadAsStringAsync();
                     return jsonResponse;
