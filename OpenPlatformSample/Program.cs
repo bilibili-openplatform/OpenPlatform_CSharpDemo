@@ -15,6 +15,7 @@ using System.Text.Json;
 using System.Net.Http.Headers;
 using System;
 using System.Xml.Linq;
+using System.Collections;
 
 namespace OpenPlatformSample
 {
@@ -72,7 +73,9 @@ namespace OpenPlatformSample
                 Console.WriteLine("9.视频稿件上传预处理");
                 Console.WriteLine("10.单个小文件视频上传");
                 Console.WriteLine("11.上传稿件封面");
-                Console.WriteLine("12.视频稿件提交");
+                Console.WriteLine("12.分片上传稿件视频");
+                Console.WriteLine("13.分片上传文件合片");
+                Console.WriteLine("14.视频稿件提交");
                 Console.Write("输入编号选择执行的demo功能：");
                 string code = Console.ReadLine();
                 Console.WriteLine("\r执行结果:");
@@ -91,80 +94,122 @@ namespace OpenPlatformSample
             {
                 //账号授权（包含网页应用唤起，签名，授权，换取token）
                 case "1":
-                    AccountAuthorization();
-                    break;
+                    {
+                        AccountAuthorization();
+                        break;
+                    }
                 //直播能力-获取直播长连消息
                 case "2":
-                    Live.Live.Start(AccessToken);
-                    break;
+                    {
+                        Live.Live.Start(AccessToken);
+                        break;
+                    }
                 //直播能力-获取直播间基础信息
                 case "3":
-                    GetRoomInfo();
-                    break;
+                    {
+                        GetRoomInfo();
+                        break;
+                    }
                 //用户管理-查询用户已授权权限列表
                 case "4":
-                    GetScopes();
-                    break;
+                    {
+                        GetScopes();
+                        break;
+                    }
                 //视频能力-查询单一视频稿件详情
                 case "5":
-                    GetArchiveView();
-                    break;
+                    {
+                        GetArchiveView();
+                        break;
+                    }
                 //视频能力-查询当前用户稿件列表
                 case "6":
-                    GetArchiveViewList();
-                    break;
+                    {
+                        GetArchiveViewList();
+                        break;
+                    }
                 //三方一键开播-获取第三方开播授权链接
                 case "7":
-                    ThirdPartyLive_ObtainAuthorizedConnection();
-                    break;
+                    {
+                        ThirdPartyLive_ObtainAuthorizedConnection();
+                        break;
+                    }
                 //获取投稿分区列表
                 case "8":
-                    GetPartitionList();
-                    break;
+                    {
+                        GetPartitionList();
+                        break;
+                    }
                 //视频稿件上传预处理
                 case "9":
-                    Console.WriteLine("请输入文件名称：");
-                    string name = Console.ReadLine();
-                    Console.WriteLine("请输入上传类型：0-多分片，1-单个小文件（不超过100M）：");
-                    string utype = Console.ReadLine();
-                    VideoManuscriptUploadPreprocess(name, utype);
-                    break;
+                    {
+                        Console.WriteLine("请输入文件名称：");
+                        string name = Console.ReadLine();
+                        Console.WriteLine("请输入上传类型：0-多分片，1-单个小文件（不超过100M）：");
+                        string utype = Console.ReadLine();
+                        VideoManuscriptUploadPreprocess(name, utype);
+                        break;
+                    }
                 //单个小文件视频上传
                 case "10":
-                    Console.WriteLine("请输入预处理授权token：");
-                    string upload_token = Console.ReadLine();
-                    Console.WriteLine("请输入文件路径：");
-                    string FilePath = Console.ReadLine();
-                    UploadSingleShortVideoFileAsync(upload_token, FilePath);
-                    break;
+                    {
+                        Console.WriteLine("请输入预处理授权token：");
+                        string upload_token = Console.ReadLine();
+                        Console.WriteLine("请输入文件路径：");
+                        string FilePath = Console.ReadLine();
+                        UploadSingleShortVideoFileAsync(upload_token, FilePath);
+                        break;
+                    }
                 //上传稿件封面
                 case "11":
-                    Console.WriteLine("请输入封面文件路径：");
-                    string coverFilePath = Console.ReadLine();
-                    VideoManuscriptCoverUpload(coverFilePath);
-                    break;
-                //视频稿件提交
-                case "12":
-                    Console.WriteLine("请输入视频上传预处理授权token：");
-                    string uploadToken = Console.ReadLine();
-                    Console.WriteLine("请输入标题：");
-                    string title = Console.ReadLine();
-                    Console.WriteLine("请输入通过接口上传返回的封面url：");
-                    string cover = Console.ReadLine();
-                    Console.WriteLine("请输入稿件分区id：");
-                    int tid = int.Parse(Console.ReadLine());
-                    Console.WriteLine("请输入视频标签，多个标签用半角逗号分割：");
-                    string tag = Console.ReadLine();
-                    Console.WriteLine("请输入版权：1-原创 2-转载：");
-                    int copyRight = int.Parse(Console.ReadLine());
-                    string source = string.Empty;
-                    if (copyRight == 2)
                     {
-                        Console.WriteLine("请输入原始稿件来源：");
-                        source = Console.ReadLine();
+                        Console.WriteLine("请输入封面文件路径：");
+                        string coverFilePath = Console.ReadLine();
+                        VideoManuscriptCoverUpload(coverFilePath);
+                        break;
                     }
-                    VideoManuscriptSubmission(uploadToken, title, cover, tid, tag, copyRight, source);
-                    break;
+                //分片上传稿件视频
+                case "12":
+                    {
+                        Console.WriteLine("请输入视频上传预处理授权token：");
+                        string uploadToken = Console.ReadLine();
+                        Console.WriteLine("请输入文件路径：");
+                        string FilePath = Console.ReadLine();
+                        UploadVideoFilesInSegments(uploadToken, FilePath);
+                        break;
+                    }
+                //分片上传文件合片
+                case "13":
+                    {
+                        Console.WriteLine("请输入视频上传预处理授权token：");
+                        string uploadToken = Console.ReadLine();
+                        SplitUploadFilesMergeThem(uploadToken);
+                        break;
+                    }
+                //视频稿件提交
+                case "14":
+                    {
+                        Console.WriteLine("请输入视频上传预处理授权token：");
+                        string uploadToken = Console.ReadLine();
+                        Console.WriteLine("请输入标题：");
+                        string title = Console.ReadLine();
+                        Console.WriteLine("请输入通过接口上传返回的封面url：");
+                        string cover = Console.ReadLine();
+                        Console.WriteLine("请输入稿件分区id：");
+                        int tid = int.Parse(Console.ReadLine());
+                        Console.WriteLine("请输入视频标签，多个标签用半角逗号分割：");
+                        string tag = Console.ReadLine();
+                        Console.WriteLine("请输入版权：1-原创 2-转载：");
+                        int copyRight = int.Parse(Console.ReadLine());
+                        string source = string.Empty;
+                        if (copyRight == 2)
+                        {
+                            Console.WriteLine("请输入原始稿件来源：");
+                            source = Console.ReadLine();
+                        }
+                        VideoManuscriptSubmission(uploadToken, title, cover, tid, tag, copyRight, source);
+                        break;
+                    }
             }
         }
 
@@ -380,21 +425,60 @@ namespace OpenPlatformSample
         /// <param name="upload_token">视频稿件上传预处理获得的授权token</param>
         /// <param name="FilePath">要上传的文件路径</param>
         /// <returns></returns>
-        public static async Task UploadSingleShortVideoFileAsync(string upload_token, string FilePath)
+        public static void UploadSingleShortVideoFileAsync(string upload_token, string FilePath)
         {
             string url = $"{VideoDomain}/video/v2/upload?upload_token={upload_token}";
-            using (HttpClient client = new HttpClient())
+            var resp = Signature.SendRequest(url, "POST", AccessToken, "", FilePath).Result;
+            if (JObject.Parse(resp)?["code"]?.ToString() == "0")
             {
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                WriteLog(resp);
+            }
+        }
 
-                using (FileStream fileStream = new FileStream(FilePath, FileMode.Open, FileAccess.Read))
+        /// <summary>
+        /// 分片上传稿件视频
+        /// </summary>
+        /// <param name="upload_token">视频稿件上传预处理获得的授权token</param>
+        /// <param name="FilePath">要上传的文件路径</param>
+        public static void UploadVideoFilesInSegments(string upload_token, string FilePath)
+        {
+            long SliceSize = 1024 * 1024 * 8;
+            byte[] FileByteArray = File.ReadAllBytes(FilePath);
+            List<byte[]> chunks = new List<byte[]>();
+            for (long i = 0; i < FileByteArray.Length; i += SliceSize)
+            {
+                long currentChunkSize = Math.Min(SliceSize, FileByteArray.Length - i);
+                byte[] chunk = new byte[currentChunkSize];
+                Array.Copy(FileByteArray, i, chunk, 0, currentChunkSize);
+                chunks.Add(chunk);
+            }
+            Console.WriteLine($"视频文件长度:{FileByteArray.Length}byte，已切为{chunks.Count()}个切片");
+
+            for (int i = 1; i <= chunks.Count(); i++)
+            {
+                Console.WriteLine($"({i}/{chunks.Count()})号切片开始上传");
+                string url = $"{VideoDomain}/video/v2/part/upload?upload_token={upload_token}&part_number={i}";
+                var resp = Signature.SendRequest(url, "POST", AccessToken, "", FilePath).Result;
+                if (JObject.Parse(resp)?["code"]?.ToString() == "0")
                 {
-                    var content = new StreamContent(fileStream);
-
-                    HttpResponseMessage response = await client.PostAsync(url, content);
-                    string resp = await response.Content.ReadAsStringAsync();
                     WriteLog(resp);
                 }
+                Console.WriteLine($"({i}/{chunks.Count()})号切片上传完成");
+            }
+        }
+
+        /// <summary>
+        /// 分片上传文件合片
+        /// </summary>
+        /// <param name="upload_token">视频稿件上传预处理获得的授权token</param>
+        /// <returns></returns>
+        public static void SplitUploadFilesMergeThem(string upload_token)
+        {
+            string url = $"{MainDomain}/arcopen/fn/archive/video/complete?upload_token={upload_token}";
+            var resp = Signature.SendRequest(url, "POST", AccessToken).Result;
+            if (JObject.Parse(resp)?["code"]?.ToString() == "0")
+            {
+                WriteLog(resp);
             }
         }
 

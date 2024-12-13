@@ -99,9 +99,9 @@ namespace OpenPlatform_Signature
         /// <param name="reqJson">请求参数的body内容json字符串</param>
         /// <param name="filePath">如果需要上传文件，那么文件路径</param>
         /// <returns></returns>
-        public static async Task<string> SendRequest(string InterfaceUrl, string RequestType, string AccessToken, string reqJson = "",string filePath = "")
+        public static async Task<string> SendRequest(string InterfaceUrl, string RequestType, string AccessToken, string reqJson = "",string filePath = "", byte[] FileByteArray = null)
         {
-            var response = await ApiRequest(reqJson, InterfaceUrl, RequestType, AccessToken, filePath);
+            var response = await ApiRequest(reqJson, InterfaceUrl, RequestType, AccessToken, filePath,FileByteArray);
             if (response == null)
             {
                     Console.WriteLine("请求失败，网络信息返回为空");
@@ -166,7 +166,7 @@ namespace OpenPlatform_Signature
 
 
         // HTTP 请求示例方法
-        private static async Task<string> ApiRequest(string reqJson, string InterfaceUrl, string Htpp_Type, string AccessToken = "",string filePath = "")
+        private static async Task<string> ApiRequest(string reqJson, string InterfaceUrl, string Htpp_Type, string AccessToken = "",string filePath = "", byte[] FileByteArray =null)
         {
             if (isTestEnv)
             {
@@ -217,16 +217,23 @@ namespace OpenPlatform_Signature
             {
                 if (Htpp_Type.ToLower() == "post")
                 {
-
                     var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{InterfaceUrl}");
                     foreach (var kvp in header.ToMap())
                     {
                         requestMessage.Headers.Add(kvp.Key, kvp.Value);
                     }
-                    if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
+                    if ((!string.IsNullOrEmpty(filePath) && File.Exists(filePath)) || FileByteArray != null)
                     {
                         var content = new MultipartFormDataContent();
-                        var fileContent = new ByteArrayContent(File.ReadAllBytes(filePath));
+                        ByteArrayContent fileContent;
+                        if(FileByteArray!=null)
+                        {
+                            fileContent = new ByteArrayContent(FileByteArray);
+                        }
+                        else
+                        {
+                            fileContent = new ByteArrayContent(File.ReadAllBytes(filePath));
+                        }                
                         fileContent.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data")
                         {
                             Name = "\"file\"",
@@ -234,7 +241,6 @@ namespace OpenPlatform_Signature
                         };
                         fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/octet-stream");
                         content.Add(fileContent);
-
                         if (!string.IsNullOrEmpty(reqJson))
                         {
                             var jsonContent = new StringContent(reqJson, Encoding.UTF8, JsonType);
