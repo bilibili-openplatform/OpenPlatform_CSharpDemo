@@ -239,7 +239,7 @@ namespace OpenPlatform_Signature
                             Name = "\"file\"",
                             FileName = "\"" + Path.GetFileName(filePath) + "\""
                         };
-                        fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/octet-stream");
+                        fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data");
                         content.Add(fileContent);
                         if (!string.IsNullOrEmpty(reqJson))
                         {
