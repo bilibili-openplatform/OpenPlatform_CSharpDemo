@@ -62,6 +62,7 @@ namespace OpenPlatformSample
             {
                 Console.WriteLine();
 
+                Console.WriteLine("0.测试签名");
                 Console.WriteLine("1.账号授权");
                 Console.WriteLine("2.直播能力-获取直播长连消息");
                 Console.WriteLine("3.直播能力-获取直播间基础信息");
@@ -92,6 +93,22 @@ namespace OpenPlatformSample
             }
             switch (code)
             {
+                //测试计算签名
+                case "0":
+                    {
+                    Console.WriteLine("请输入计算签名的Client_ID：");
+                    string Client_ID = Console.ReadLine();
+                    Console.WriteLine("请输入计算签名的App_Secret：");
+                    string App_Secret = Console.ReadLine();
+                    Console.WriteLine("请输入计算签名的Nonce：");
+                    string Nonce = Console.ReadLine();
+                    Console.WriteLine("请输入用于计算签名的body ReqJson或者已计算好的md5内容：");
+                    string ReqJson = Console.ReadLine();
+                    Console.WriteLine("请输入计算签名的TimeStamp：");
+                    string TimeStamp = Console.ReadLine();
+                    Console.WriteLine("计算签名结果：\n" + OpenPlatform_Signature.Signature.SignatureTest(Client_ID, App_Secret,Nonce,TimeStamp,ReqJson));
+                    break;
+                }
                 //账号授权（包含网页应用唤起，签名，授权，换取token）
                 case "1":
                     {
