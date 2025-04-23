@@ -72,7 +72,7 @@ namespace OpenPlatformSample
                 Console.WriteLine("12.分片上传稿件视频");
                 Console.WriteLine("13.分片上传文件合片");
                 Console.WriteLine("14.视频稿件提交");
-                Console.WriteLine("15.大会员通行证信息查询");
+                Console.WriteLine("15.大会员-二次元通行证信息查询");
                 Console.Write("输入编号选择执行的demo功能：");
                 string code = Console.ReadLine();
                 Console.WriteLine("\r执行结果:");
@@ -223,7 +223,7 @@ namespace OpenPlatformSample
                         VideoManuscriptSubmission(uploadToken, title, cover, tid, tag, copyRight, source);
                         break;
                     }
-                //获取二次元通行信息查询
+                //获取大会员-二次元通行证信息
                 case "15":
                     {
                         GetAnimeUserValid();
@@ -387,7 +387,7 @@ namespace OpenPlatformSample
         }
 
         /// <summary>
-        /// 获取二次元通行信息查询
+        /// 获取大会员-二次元通行证信息
         /// </summary>
         public static void GetAnimeUserValid()
         {
