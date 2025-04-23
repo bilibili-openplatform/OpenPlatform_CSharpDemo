@@ -28,9 +28,9 @@ namespace OpenPlatformSample
         /// </summary>
         public static void Init()
         {
-            OpenPlatform_Signature.Signature.Client_ID = Secrest["Client_ID"];//入驻开放平台后，通过并且创建应用完成后，应用的Client_ID（https://open.bilibili.com/company-core）
-            OpenPlatform_Signature.Signature.App_Secret = Secrest["App_Secret"];//入驻开放平台后，通过并且创建应用完成后，应用的App_Secret(https://open.bilibili.com/company-core)
-            OpenPlatform_Signature.Signature.ReturnUrl = Secrest["ReturnUrl"];//创建应用后，开发者自行设置的'应用回调域'（https://open.bilibili.com/company-core/{Client_ID}/detail）
+            OpenPlatform_Signature.Signature.Client_ID = Signature.IsUAT?Secrest["UAT_Client_ID"]:Secrest["PROD_Client_ID"];//入驻开放平台后，通过并且创建应用完成后，应用的Client_ID（https://open.bilibili.com/company-core）
+            OpenPlatform_Signature.Signature.App_Secret = Signature.IsUAT?Secrest["UAT_App_Secret"]:Secrest["PROD_App_Secret"];//入驻开放平台后，通过并且创建应用完成后，应用的App_Secret(https://open.bilibili.com/company-core)
+            OpenPlatform_Signature.Signature.ReturnUrl = Signature.IsUAT?Secrest["UAT_ReturnUrl"]:Secrest["PROD_ReturnUrl"];//创建应用后，开发者自行设置的'应用回调域'（https://open.bilibili.com/company-core/{Client_ID}/detail）
         }
 
 
@@ -42,21 +42,16 @@ namespace OpenPlatformSample
 
         //用于读取机密信息的接口对象
         private static IConfigurationRoot Secrest = new ConfigurationBuilder().AddUserSecrets<Program>().Build();
+        private static string AccessToken = Signature.IsUAT?Secrest["UAT_AccessToken"]:Secrest["PROD_AccessToken"];
+        private static string OpenId = Signature.IsUAT?Secrest["UAT_OpenId"]:Secrest["PROD_OpenId"];
 
-        private static string AccessToken = Secrest["AccessToken"];
-        private static string OpenId = Secrest["OpenId"];
-
-        private const string MainDomain = "https://member.bilibili.com";
-        private const string VideoDomain = "https://openupos.bilivideo.com";
+     
 
 
         public static void Main(string[] args)
         {
             //初始化，必须最先启动，不能删除
             Init();
-
-
-
 
             while (true)
             {
@@ -77,6 +72,7 @@ namespace OpenPlatformSample
                 Console.WriteLine("12.分片上传稿件视频");
                 Console.WriteLine("13.分片上传文件合片");
                 Console.WriteLine("14.视频稿件提交");
+                Console.WriteLine("15.大会员通行证信息查询");
                 Console.Write("输入编号选择执行的demo功能：");
                 string code = Console.ReadLine();
                 Console.WriteLine("\r执行结果:");
@@ -227,6 +223,12 @@ namespace OpenPlatformSample
                         VideoManuscriptSubmission(uploadToken, title, cover, tid, tag, copyRight, source);
                         break;
                     }
+                //获取二次元通行信息查询
+                case "15":
+                    {
+                        GetAnimeUserValid();
+                        break;
+                    }
             }
         }
 
@@ -243,7 +245,7 @@ namespace OpenPlatformSample
             if (string.IsNullOrEmpty(OpenId))
             {
                 //https://open.bilibili.com/doc/4/feb66f99-7d87-c206-00e7-d84164cd701c
-                var url = $"{MainDomain}/arcopen/fn/user/account/info";
+                var url = $"{Signature.MainDomain}/arcopen/fn/user/account/info";
                 var resp = Signature.SendRequest(url, "GET", AccessToken).Result;
                 if (JObject.Parse(resp)?["code"]?.ToString() == "0")
                 {
@@ -261,7 +263,7 @@ namespace OpenPlatformSample
         {
             (string open_id, long room_id, string title, bool is_streaming, bool is_banned) info = new();
             //https://open.bilibili.com/doc/4/67eaa648-3f67-f2bc-0fac-efa5fb922305
-            var url = $"{MainDomain}/arcopen/fn/live/room/info";
+            var url = $"{Signature.MainDomain}/arcopen/fn/live/room/info";
             var resp = Signature.SendRequest(url, "GET", AccessToken).Result;
             if (JObject.Parse(resp)?["code"]?.ToString() == "0")
             {
@@ -282,7 +284,7 @@ namespace OpenPlatformSample
         {
             (string open_id, List<string> scopes) info = new() { scopes = new() };
             //https://open.bilibili.com/doc/4/08f935c5-29f1-e646-85a3-0b11c2830558
-            var url = $"{MainDomain}/arcopen/fn/user/account/scopes";
+            var url = $"{Signature.MainDomain}/arcopen/fn/user/account/scopes";
 
             var resp = Signature.SendRequest(url, "GET", AccessToken).Result;
             if (JObject.Parse(resp)?["code"]?.ToString() == "0")
@@ -318,7 +320,7 @@ namespace OpenPlatformSample
 
             var queryString = string.Join("&", queryParams);
             //https://open.bilibili.com/doc/4/d9554788-dcef-f139-6217-b487d41c3826
-            var url = $"{MainDomain}/arcopen/fn/archive/view?{queryString}";
+            var url = $"{Signature.MainDomain}/arcopen/fn/archive/view?{queryString}";
 
             var resp = Signature.SendRequest(url, "GET", AccessToken).Result;
             if (JObject.Parse(resp)?["code"]?.ToString() == "0")
@@ -346,7 +348,7 @@ namespace OpenPlatformSample
 
             var queryString = string.Join("&", queryParams);
             //https://open.bilibili.com/doc/4/a24030b7-6b8f-b36c-32d8-a4aae67fcc35
-            var url = $"{MainDomain}/arcopen/fn/archive/viewlist?{queryString}";
+            var url = $"{Signature.MainDomain}/arcopen/fn/archive/viewlist?{queryString}";
 
             var resp = Signature.SendRequest(url, "GET", AccessToken).Result;
             if (JObject.Parse(resp)?["code"]?.ToString() == "0")
@@ -375,9 +377,27 @@ namespace OpenPlatformSample
 
             var queryString = string.Join("&", queryParams);
             //https://open.bilibili.com/doc/4/5827c4a4-aab6-235e-624b-a47248d712e3
-            var url = $"{MainDomain}/liveopen/fn/live/thirdPartyLive/grantUrl?{queryString}";
+            var url = $"{Signature.MainDomain}/liveopen/fn/live/thirdPartyLive/grantUrl?{queryString}";
 
             var resp = Signature.SendRequest(url, "GET", AccessToken).Result;
+            if (JObject.Parse(resp)?["code"]?.ToString() == "0")
+            {
+                WriteLog(resp);
+            }
+        }
+
+        /// <summary>
+        /// 获取二次元通行信息查询
+        /// </summary>
+        public static void GetAnimeUserValid()
+        {
+            var requestParameters = new Dictionary<string, string?>
+            {
+                { "open_id", OpenId }
+            };
+            var url = $"{Signature.MainDomain}/arcopen/fn/common/vip/anime_user_valid";
+            var reqJson = JsonConvert.SerializeObject(requestParameters);
+            var resp = Signature.SendRequest(url, "POST", AccessToken, reqJson).Result;
             if (JObject.Parse(resp)?["code"]?.ToString() == "0")
             {
                 WriteLog(resp);
@@ -392,7 +412,7 @@ namespace OpenPlatformSample
         public static void GetPartitionList()
         {
             //https://open.bilibili.com/doc/4/4f13299b-5316-142f-df6a-87313eaf85a9
-            var url = $"{MainDomain}/arcopen/fn/archive/type/list";
+            var url = $"{Signature.MainDomain}/arcopen/fn/archive/type/list";
             var resp = Signature.SendRequest(url, "GET", AccessToken).Result;
             if (JObject.Parse(resp)?["code"]?.ToString() == "0")
             {
@@ -413,7 +433,7 @@ namespace OpenPlatformSample
                 { "utype", utype }
             };
             //https://open.bilibili.com/doc/4/0c532c6a-e6fb-0aff-8021-905ae2409095
-            var url = $"{MainDomain}/arcopen/fn/archive/video/init";
+            var url = $"{Signature.MainDomain}/arcopen/fn/archive/video/init";
             var reqJson = JsonConvert.SerializeObject(requestParameters);
             var resp = Signature.SendRequest(url, "POST", AccessToken, reqJson).Result;
             if (JObject.Parse(resp)?["code"]?.ToString() == "0")
@@ -428,7 +448,7 @@ namespace OpenPlatformSample
         /// <param name="FilePath">封面文件路径</param>
         public static void VideoManuscriptCoverUpload(string FilePath)
         {
-            var url = $"{MainDomain}/arcopen/fn/archive/cover/upload";
+            var url = $"{Signature.MainDomain}/arcopen/fn/archive/cover/upload";
             var resp = Signature.SendRequest(url, "POST", AccessToken, "", FilePath).Result;
             if (JObject.Parse(resp)?["code"]?.ToString() == "0")
             {
@@ -444,7 +464,7 @@ namespace OpenPlatformSample
         /// <returns></returns>
         public static void UploadSingleShortVideoFileAsync(string upload_token, string FilePath)
         {
-            string url = $"{VideoDomain}/video/v2/upload?upload_token={upload_token}";
+            string url = $"{Signature.VideoDomain}/video/v2/upload?upload_token={upload_token}";
             var resp = Signature.SendRequest(url, "POST", AccessToken, "", FilePath).Result;
             if (JObject.Parse(resp)?["code"]?.ToString() == "0")
             {
@@ -474,7 +494,7 @@ namespace OpenPlatformSample
             for (int i = 1; i <= chunks.Count(); i++)
             {
                 Console.WriteLine($"({i}/{chunks.Count()})号切片开始上传");
-                string url = $"{VideoDomain}/video/v2/part/upload?upload_token={upload_token}&part_number={i}";
+                string url = $"{Signature.VideoDomain}/video/v2/part/upload?upload_token={upload_token}&part_number={i}";
                 var resp = Signature.SendRequest(url, "POST", AccessToken, "", FilePath).Result;
                 if (JObject.Parse(resp)?["code"]?.ToString() == "0")
                 {
@@ -491,7 +511,7 @@ namespace OpenPlatformSample
         /// <returns></returns>
         public static void SplitUploadFilesMergeThem(string upload_token)
         {
-            string url = $"{MainDomain}/arcopen/fn/archive/video/complete?upload_token={upload_token}";
+            string url = $"{Signature.MainDomain}/arcopen/fn/archive/video/complete?upload_token={upload_token}";
             var resp = Signature.SendRequest(url, "POST", AccessToken).Result;
             if (JObject.Parse(resp)?["code"]?.ToString() == "0")
             {
@@ -524,7 +544,7 @@ namespace OpenPlatformSample
                 requestParameters.Add("source", source);
             }
             //https://open.bilibili.com/doc/4/f7fc57dd-55a1-5cb1-cba4-61fb2994bf0f
-            var url = $"{MainDomain}/arcopen/fn/archive/add-by-utoken?upload_token={upload_token}";
+            var url = $"{Signature.MainDomain}/arcopen/fn/archive/add-by-utoken?upload_token={upload_token}";
             var reqJson = JsonConvert.SerializeObject(requestParameters);
             var resp = Signature.SendRequest(url, "POST", AccessToken, reqJson).Result;
             if (JObject.Parse(resp)?["code"]?.ToString() == "0")

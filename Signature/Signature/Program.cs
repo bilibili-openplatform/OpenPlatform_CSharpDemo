@@ -23,6 +23,11 @@ namespace OpenPlatform_Signature
         public static string App_Secret = ""; // 入驻开放平台后，通过并且创建应用完成后，应用的App_Secret（https://open.bilibili.com/company-core）
         public static string ReturnUrl = "";//创建应用后，开发者自行设置的'应用回调域'（https://open.bilibili.com/company-core/{Client_ID}/detail）
 
+        public const bool IsUAT = true;
+        public const string MainDomain = IsUAT ? "https://uat-member.bilibili.com" : "https://member.bilibili.com";
+        public const string VideoDomain = IsUAT ? "https://uat-openupos.bilivideo.com" : "https://openupos.bilivideo.com";
+        public const string ApiDomain = IsUAT ? "https://uat-api.bilibili.com" : "https://api.bilibili.com";
+        public const string AccountDomain = IsUAT ? "https://uat-account.bilibili.com" : "https://account.bilibili.com";
 
         // 常量定义
         internal const string AcceptHeader = "Accept";
@@ -100,12 +105,12 @@ namespace OpenPlatform_Signature
         /// <param name="reqJson">请求参数的body内容json字符串</param>
         /// <param name="filePath">如果需要上传文件，那么文件路径</param>
         /// <returns></returns>
-        public static async Task<string> SendRequest(string InterfaceUrl, string RequestType, string AccessToken, string reqJson = "",string filePath = "", byte[] FileByteArray = null)
+        public static async Task<string> SendRequest(string InterfaceUrl, string RequestType, string AccessToken, string reqJson = "", string filePath = "", byte[] FileByteArray = null)
         {
-            var response = await ApiRequest(reqJson, InterfaceUrl, RequestType, AccessToken, filePath,FileByteArray);
+            var response = await ApiRequest(reqJson, InterfaceUrl, RequestType, AccessToken, filePath, FileByteArray);
             if (response == null)
             {
-                    Console.WriteLine("请求失败，网络信息返回为空");
+                Console.WriteLine("请求失败，网络信息返回为空");
             }
             else
             {
@@ -167,7 +172,7 @@ namespace OpenPlatform_Signature
 
 
         // HTTP 请求示例方法
-        private static async Task<string> ApiRequest(string reqJson, string InterfaceUrl, string Htpp_Type, string AccessToken = "",string filePath = "", byte[] FileByteArray =null)
+        private static async Task<string> ApiRequest(string reqJson, string InterfaceUrl, string Htpp_Type, string AccessToken = "", string filePath = "", byte[] FileByteArray = null)
         {
             if (isTestEnv)
             {
@@ -227,14 +232,14 @@ namespace OpenPlatform_Signature
                     {
                         var content = new MultipartFormDataContent();
                         ByteArrayContent fileContent;
-                        if(FileByteArray!=null)
+                        if (FileByteArray != null)
                         {
                             fileContent = new ByteArrayContent(FileByteArray);
                         }
                         else
                         {
                             fileContent = new ByteArrayContent(File.ReadAllBytes(filePath));
-                        }                
+                        }
                         fileContent.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data")
                         {
                             Name = "\"file\"",
@@ -255,6 +260,11 @@ namespace OpenPlatform_Signature
                     }
                     var response = await client.SendAsync(requestMessage);
                     var jsonResponse = await response.Content.ReadAsStringAsync();
+
+                    string curlCommand = GenerateCurlCommand(requestMessage, reqJson, filePath, FileByteArray);
+                    Console.WriteLine("Generated curl command:");
+                    Console.WriteLine(curlCommand);
+
                     return jsonResponse;
 
 
@@ -287,13 +297,13 @@ namespace OpenPlatform_Signature
         /// <param name="TimeStamp">用于计算签名的秒级时间戳</param>
         /// <param name="ReqJson">用于计算签名的应用body内容或者已计算好的md5值</param>
         /// <returns></returns>
-        public static string SignatureTest(string Client_ID,string App_Secret,string Nonce,string TimeStamp,string ReqJson)
+        public static string SignatureTest(string Client_ID, string App_Secret, string Nonce, string TimeStamp, string ReqJson)
         {
             var header = new CommonHeader
             {
-                Timestamp = string.IsNullOrEmpty(TimeStamp)?DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString():TimeStamp,
+                Timestamp = string.IsNullOrEmpty(TimeStamp) ? DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString() : TimeStamp,
                 SignatureMethod = HmacSha256,
-                Nonce = string.IsNullOrEmpty(Nonce)?Guid.NewGuid().ToString():Nonce,
+                Nonce = string.IsNullOrEmpty(Nonce) ? Guid.NewGuid().ToString() : Nonce,
                 AccessKeyId = Client_ID,
                 SignatureVersion = BiliVersion,
                 ContentMD5 = Regex.IsMatch(ReqJson, @"^[a-fA-F0-9]{32}$") ? ReqJson : Md5(ReqJson)
@@ -301,6 +311,43 @@ namespace OpenPlatform_Signature
 
             header.Authorization = CreateSignature(header, App_Secret);
             return header.Authorization;
+        }
+
+        private static string GenerateCurlCommand(HttpRequestMessage requestMessage, string reqJson, string filePath, byte[] FileByteArray)
+        {
+            var curlCommand = new StringBuilder();
+            curlCommand.Append("curl -X ").Append(requestMessage.Method.Method).Append(" ");
+
+            // 添加 URL
+            curlCommand.Append("\"").Append(requestMessage.RequestUri).Append("\" ");
+
+            // 添加请求头
+            foreach (var header in requestMessage.Headers)
+            {
+                curlCommand.Append("-H \"").Append(header.Key).Append(": ").Append(string.Join(", ", header.Value)).Append("\" ");
+            }
+
+            // 添加请求体
+            if (requestMessage.Content != null)
+            {
+                if (requestMessage.Content is MultipartFormDataContent)
+                {
+                    if (!string.IsNullOrEmpty(filePath) || FileByteArray != null)
+                    {
+                        curlCommand.Append("-F \"file=@").Append(filePath).Append("\" ");
+                    }
+                    if (!string.IsNullOrEmpty(reqJson))
+                    {
+                        curlCommand.Append("-F \"json=").Append(reqJson).Append("\" ");
+                    }
+                }
+                else
+                {
+                    curlCommand.Append("-d \"").Append(reqJson).Append("\" ");
+                }
+            }
+
+            return curlCommand.ToString();
         }
 
 

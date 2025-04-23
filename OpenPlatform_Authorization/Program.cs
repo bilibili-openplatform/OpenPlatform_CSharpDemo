@@ -18,7 +18,7 @@ namespace OpenPlatform_Authorization
         {
             #region 授权
             //https://open.bilibili.com/doc/4/eaf0e2b5-bde9-b9a0-9be1-019bb455701c
-            string toAuthorizationUrl = $"https://passport.bilibili.com/register/pc_oauth2.html#/?client_id={Client_ID}&return_url={ReturnUrl}&response_type=code&state=TestDemo";
+            string toAuthorizationUrl = $"{AccountDomain}/pc/account-pc/auth/oauth?client_id={Client_ID}&gourl={ReturnUrl}&state=TestDemo";
             Process.Start(new ProcessStartInfo
             {
                 FileName = toAuthorizationUrl,

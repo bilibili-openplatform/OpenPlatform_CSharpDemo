@@ -1,4 +1,6 @@
-﻿namespace OpenPlatform_Authorization
+﻿using System;
+
+namespace OpenPlatform_Authorization
 {
     internal class AccessToken
     {
@@ -19,7 +21,7 @@
                 new KeyValuePair<string, string>("grant_type", "authorization_code"),
                 new KeyValuePair<string, string>("code", code)
             });
-            var response = await client.PostAsync("https://api.bilibili.com/x/account-oauth2/v1/token", content);
+            var response = await client.PostAsync($"{OpenPlatform_Signature.Signature.ApiDomain}/x/account-oauth2/v1/token", content);
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadAsStringAsync();
         }
