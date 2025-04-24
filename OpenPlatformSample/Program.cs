@@ -393,7 +393,7 @@ namespace OpenPlatformSample
         {
             var requestParameters = new Dictionary<string, string?>
             {
-                { "open_id", OpenId }
+                { "user_open_id", OpenId }
             };
             var url = $"{Signature.MainDomain}/arcopen/fn/common/vip/anime_user_valid";
             var reqJson = JsonConvert.SerializeObject(requestParameters);
