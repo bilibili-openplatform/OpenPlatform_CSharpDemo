@@ -23,7 +23,7 @@ namespace OpenPlatform_Signature
         public static string App_Secret = ""; // 入驻开放平台后，通过并且创建应用完成后，应用的App_Secret（https://open.bilibili.com/company-core）
         public static string ReturnUrl = "";//创建应用后，开发者自行设置的'应用回调域'（https://open.bilibili.com/company-core/{Client_ID}/detail）
 
-        public const bool IsUAT = true; //该参数默认为false，UAT调试仅限于和官方进行联调的情况，自行打开无用
+        public const bool IsUAT = false; //该参数默认为false，UAT调试仅限于和官方进行联调的情况，自行打开无用
         public const string MainDomain = IsUAT ? "https://uat-member.bilibili.com" : "https://member.bilibili.com";
         public const string VideoDomain = IsUAT ? "https://uat-openupos.bilivideo.com" : "https://openupos.bilivideo.com";
         public const string ApiDomain = IsUAT ? "https://uat-api.bilibili.com" : "https://api.bilibili.com";

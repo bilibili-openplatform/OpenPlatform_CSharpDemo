@@ -395,7 +395,7 @@ namespace OpenPlatformSample
             {
                 { "user_open_id", OpenId }
             };
-            var url = $"{Signature.MainDomain}/arcopen/fn/common/vip/anime_user_valid";
+            var url = $"{Signature.MainDomain}/arcopen/fn/common/vip_anime_user_valid";
             var reqJson = JsonConvert.SerializeObject(requestParameters);
             var resp = Signature.SendRequest(url, "POST", AccessToken, reqJson).Result;
             if (JObject.Parse(resp)?["code"]?.ToString() == "0")
