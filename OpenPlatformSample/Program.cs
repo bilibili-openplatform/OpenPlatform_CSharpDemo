@@ -466,6 +466,9 @@ namespace OpenPlatformSample
         {
             string url = $"{Signature.VideoDomain}/video/v2/upload?upload_token={upload_token}";
             var resp = Signature.SendRequest(url, "POST", AccessToken, "", FilePath).Result;
+            Console.WriteLine("-----------");
+            Console.WriteLine("该请求无需header携带签名，示例中demo只是通用中间件增加了签名字段，可以无视");
+            Console.WriteLine("-----------");
             if (JObject.Parse(resp)?["code"]?.ToString() == "0")
             {
                 WriteLog(resp);

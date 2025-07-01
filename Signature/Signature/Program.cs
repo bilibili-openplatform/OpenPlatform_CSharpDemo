@@ -23,11 +23,11 @@ namespace OpenPlatform_Signature
         public static string App_Secret = ""; // 入驻开放平台后，通过并且创建应用完成后，应用的App_Secret（https://open.bilibili.com/company-core）
         public static string ReturnUrl = "";//创建应用后，开发者自行设置的'应用回调域'（https://open.bilibili.com/company-core/{Client_ID}/detail）
 
-        public const bool IsUAT = false; //该参数默认为false，UAT调试仅限于和官方进行联调的情况，自行打开无用
-        public const string MainDomain = IsUAT ? "https://uat-member.bilibili.com" : "https://member.bilibili.com";
-        public const string VideoDomain = IsUAT ? "https://uat-openupos.bilivideo.com" : "https://openupos.bilivideo.com";
-        public const string ApiDomain = IsUAT ? "https://uat-api.bilibili.com" : "https://api.bilibili.com";
-        public const string AccountDomain = IsUAT ? "https://uat-account.bilibili.com" : "https://account.bilibili.com";
+        public static bool IsUAT = false; //该参数默认为false，UAT调试仅限于和官方进行联调的情况，自行打开无用
+        public static string MainDomain = IsUAT ? "https://uat-member.bilibili.com" : "https://member.bilibili.com";
+        public static string VideoDomain = IsUAT ? "https://uat-openupos.bilivideo.com" : "https://openupos.bilivideo.com";
+        public static string ApiDomain = IsUAT ? "https://uat-api.bilibili.com" : "https://api.bilibili.com";
+        public static string AccountDomain = IsUAT ? "https://uat-account.bilibili.com" : "https://account.bilibili.com";
 
         // 常量定义
         internal const string AcceptHeader = "Accept";
@@ -184,6 +184,7 @@ namespace OpenPlatform_Signature
                 else
                     Console.WriteLine($"body为空\n");
             }
+
             var header = new CommonHeader
             {
                 Accept = JsonType,
@@ -199,7 +200,6 @@ namespace OpenPlatform_Signature
 
             header.Authorization = CreateSignature(header, App_Secret);
 
-
             var sortedMap = header.ToMap().OrderBy(kvp => kvp.Key).ToList();
             Console.WriteLine($"Header信息：\n");
             foreach (var item in sortedMap)
@@ -207,6 +207,7 @@ namespace OpenPlatform_Signature
                 Console.WriteLine($"{item.Key} = {item.Value}");
             }
             Console.WriteLine();
+
             if (isTestEnv)
             {
                 Console.WriteLine($"计算生成的签名：{header.Authorization}\n");
@@ -218,46 +219,61 @@ namespace OpenPlatform_Signature
                 Console.WriteLine();
             }
 
-
             using (var client = new HttpClient())
             {
                 if (Htpp_Type.ToLower() == "post")
                 {
-                    var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{InterfaceUrl}");
+                    var requestMessage = new HttpRequestMessage(HttpMethod.Post, InterfaceUrl);
+
+                    // 添加 Headers
                     foreach (var kvp in header.ToMap())
                     {
                         requestMessage.Headers.Add(kvp.Key, kvp.Value);
                     }
+
+                    // 设置文件内容作为请求体
                     if ((!string.IsNullOrEmpty(filePath) && File.Exists(filePath)) || FileByteArray != null)
                     {
-                        var content = new MultipartFormDataContent();
-                        ByteArrayContent fileContent;
-                        if (FileByteArray != null)
+                        if (InterfaceUrl.Contains("member.bilibili.com"))
                         {
-                            fileContent = new ByteArrayContent(FileByteArray);
+                            var content = new MultipartFormDataContent();
+                            ByteArrayContent fileContent;
+                            if (FileByteArray != null)
+                            {
+                                fileContent = new ByteArrayContent(FileByteArray);
+                            }
+                            else
+                            {
+                                fileContent = new ByteArrayContent(File.ReadAllBytes(filePath));
+                            }
+                            fileContent.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data")
+                            {
+                                Name = "\"file\"",
+                                FileName = "\"" + Path.GetFileName(filePath) + "\""
+                            };
+                            fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data");
+                            content.Add(fileContent);
+                            if (!string.IsNullOrEmpty(reqJson))
+                            {
+                                var jsonContent = new StringContent(reqJson, Encoding.UTF8, JsonType);
+                                content.Add(jsonContent, "json");
+                            }
+                            requestMessage.Content = content;
                         }
                         else
                         {
-                            fileContent = new ByteArrayContent(File.ReadAllBytes(filePath));
+                            byte[] fileBytes = FileByteArray ?? File.ReadAllBytes(filePath);
+                            requestMessage.Content = new ByteArrayContent(fileBytes);
+                            // 强制设置 Content-Type 为 application/json
+                            requestMessage.Content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
                         }
-                        fileContent.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data")
-                        {
-                            Name = "\"file\"",
-                            FileName = "\"" + Path.GetFileName(filePath) + "\""
-                        };
-                        fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data");
-                        content.Add(fileContent);
-                        if (!string.IsNullOrEmpty(reqJson))
-                        {
-                            var jsonContent = new StringContent(reqJson, Encoding.UTF8, JsonType);
-                            content.Add(jsonContent, "json");
-                        }
-                        requestMessage.Content = content;
+                        
                     }
                     else
                     {
                         requestMessage.Content = new StringContent(reqJson, Encoding.UTF8, JsonType);
                     }
+
                     var response = await client.SendAsync(requestMessage);
                     var jsonResponse = await response.Content.ReadAsStringAsync();
 
@@ -266,12 +282,10 @@ namespace OpenPlatform_Signature
                     Console.WriteLine(curlCommand);
 
                     return jsonResponse;
-
-
                 }
                 else if (Htpp_Type.ToLower() == "get")
                 {
-                    var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{InterfaceUrl}");
+                    var requestMessage = new HttpRequestMessage(HttpMethod.Get, InterfaceUrl);
                     requestMessage.Content = new StringContent("", Encoding.UTF8, "application/json");
                     foreach (var kvp in header.ToMap())
                     {
@@ -324,7 +338,7 @@ namespace OpenPlatform_Signature
             // 添加请求头
             foreach (var header in requestMessage.Headers)
             {
-                curlCommand.Append("-H \"").Append(header.Key).Append(": ").Append(string.Join(", ", header.Value)).Append("\" ");
+                curlCommand.Append("\r\n-H \"").Append(header.Key).Append(": ").Append(string.Join(", ", header.Value)).Append("\" ");
             }
 
             // 添加请求体
@@ -334,16 +348,16 @@ namespace OpenPlatform_Signature
                 {
                     if (!string.IsNullOrEmpty(filePath) || FileByteArray != null)
                     {
-                        curlCommand.Append("-F \"file=@").Append(filePath).Append("\" ");
+                        curlCommand.Append("\r\n-F \"file=@").Append(filePath).Append("\" ");
                     }
                     if (!string.IsNullOrEmpty(reqJson))
                     {
-                        curlCommand.Append("-F \"json=").Append(reqJson).Append("\" ");
+                        curlCommand.Append("\r\n-F \"json=").Append(reqJson).Append("\" ");
                     }
                 }
                 else
                 {
-                    curlCommand.Append("-d \"").Append(reqJson).Append("\" ");
+                    curlCommand.Append("\r\n-d \"").Append(reqJson).Append("\" ");
                 }
             }
 
