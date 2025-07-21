@@ -174,16 +174,14 @@ namespace OpenPlatform_Signature
         // HTTP 请求示例方法
         private static async Task<string> ApiRequest(string reqJson, string InterfaceUrl, string Htpp_Type, string AccessToken = "", string filePath = "", byte[] FileByteArray = null)
         {
-            if (isTestEnv)
-            {
-                Console.WriteLine($"请求地址：{InterfaceUrl}");
-                Console.WriteLine($"请求类型：{Htpp_Type}");
-                Console.WriteLine($"请求参数：");
-                if (!string.IsNullOrEmpty(reqJson))
-                    Console.WriteLine($"body:\n{reqJson}");
-                else
-                    Console.WriteLine($"body为空\n");
-            }
+            Console.WriteLine($"请求地址：{InterfaceUrl}");
+            Console.WriteLine($"请求类型：{Htpp_Type}");
+            Console.WriteLine($"请求参数：");
+            if (!string.IsNullOrEmpty(reqJson))
+                Console.WriteLine($"body:\n{reqJson}");
+            else
+                Console.WriteLine($"body为空\n");
+
 
             var header = new CommonHeader
             {

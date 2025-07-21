@@ -21,6 +21,9 @@ namespace OpenPlatform_Authorization
                 new KeyValuePair<string, string>("grant_type", "authorization_code"),
                 new KeyValuePair<string, string>("code", code)
             });
+            Console.WriteLine($"请求地址：{OpenPlatform_Signature.Signature.ApiDomain}/x/account-oauth2/v1/token");
+            Console.WriteLine($"请求类型：Post");  
+            
             var response = await client.PostAsync($"{OpenPlatform_Signature.Signature.ApiDomain}/x/account-oauth2/v1/token", content);
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadAsStringAsync();
