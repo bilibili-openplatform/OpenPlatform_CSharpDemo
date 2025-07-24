@@ -55,26 +55,27 @@ namespace OpenPlatformSample
 
             while (true)
             {
-                Console.WriteLine("编号太多了，看Main函数的注释代码");
+                //Console.WriteLine("编号太多了，看Main函数的注释代码");
 
                 //参考这里的代码输入ID执行demo
 
-                //Console.WriteLine("0.测试签名");
-                //Console.WriteLine("1.账号授权");
-                //Console.WriteLine("2.直播能力-获取直播长连消息");
-                //Console.WriteLine("3.直播能力-获取直播间基础信息");
-                //Console.WriteLine("4.用户管理-查询用户已授权权限列表");
-                //Console.WriteLine("5.视频能力-查询单一视频稿件详情");
-                //Console.WriteLine("6.视频能力-查询当前用户稿件列表");
-                //Console.WriteLine("7.三方一键开播-获取第三方开播授权链接");
-                //Console.WriteLine("8.获取投稿分区列表");
-                //Console.WriteLine("9.视频稿件上传预处理");
-                //Console.WriteLine("10.单个小文件视频上传");
-                //Console.WriteLine("11.上传稿件封面");
-                //Console.WriteLine("12.分片上传稿件视频");
-                //Console.WriteLine("13.分片上传文件合片");
-                //Console.WriteLine("14.视频稿件提交");
-                //Console.WriteLine("15.大会员-二次元通行证信息查询");
+                Console.WriteLine("0.测试签名");
+                Console.WriteLine("1.账号授权");
+                Console.WriteLine("2.直播能力-获取直播长连消息");
+                Console.WriteLine("3.直播能力-获取直播间基础信息");
+                Console.WriteLine("4.用户管理-查询用户已授权权限列表");
+                Console.WriteLine("5.视频能力-查询单一视频稿件详情");
+                Console.WriteLine("6.视频能力-查询当前用户稿件列表");
+                Console.WriteLine("7.三方一键开播-获取第三方开播授权链接");
+                Console.WriteLine("8.获取投稿分区列表");
+                Console.WriteLine("9.视频稿件上传预处理");
+                Console.WriteLine("10.单个小文件视频上传");
+                Console.WriteLine("11.上传稿件封面");
+                Console.WriteLine("12.分片上传稿件视频");
+                Console.WriteLine("13.分片上传文件合片");
+                Console.WriteLine("14.视频稿件提交");
+                Console.WriteLine("15.大会员-二次元通行证信息查询");
+                Console.WriteLine("16.商业化-电商-商品模块-上传图片");
                 Console.Write("输入编号选择执行的demo功能：");
                 string code = Console.ReadLine();
                 Console.WriteLine("\r执行结果:");
@@ -229,6 +230,14 @@ namespace OpenPlatformSample
                 case "15":
                     {
                         GetAnimeUserValid();
+                        break;
+                    }
+                    //上传稿件封面
+                case "16":
+                    {
+                        Console.WriteLine("请输入图片文件路径：");
+                        string coverFilePath = Console.ReadLine();
+                        ProductImageUpload(coverFilePath);
                         break;
                     }
             }
@@ -553,6 +562,20 @@ namespace OpenPlatformSample
             var url = $"{Signature.MainDomain}/arcopen/fn/archive/add-by-utoken?upload_token={upload_token}";
             var reqJson = JsonConvert.SerializeObject(requestParameters);
             var resp = Signature.SendRequest(url, "POST", AccessToken, reqJson).Result;
+            if (JObject.Parse(resp)?["code"]?.ToString() == "0")
+            {
+                WriteLog(resp);
+            }
+        }
+
+        /// <summary>
+        /// 商业化-电商-商品模块-上传图片
+        /// </summary>
+        /// <param name="FilePath">图片文件路径</param>
+        public static void ProductImageUpload(string FilePath)
+        {
+            var url = $"{Signature.MainDomain}/arcopen/fn/v2/market/commodity/image/upload";
+            var resp = Signature.SendRequest(url, "POST", AccessToken, "", FilePath).Result;
             if (JObject.Parse(resp)?["code"]?.ToString() == "0")
             {
                 WriteLog(resp);
