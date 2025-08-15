@@ -76,6 +76,7 @@ namespace OpenPlatformSample
                 Console.WriteLine("14.视频稿件提交");
                 Console.WriteLine("15.大会员-二次元通行证信息查询");
                 Console.WriteLine("16.商业化-电商-商品模块-上传图片");
+                Console.WriteLine("17.查询充电记录");
                 Console.Write("输入编号选择执行的demo功能：");
                 string code = Console.ReadLine();
                 Console.WriteLine("\r执行结果:");
@@ -232,12 +233,20 @@ namespace OpenPlatformSample
                         GetAnimeUserValid();
                         break;
                     }
-                    //上传稿件封面
+                //上传稿件封面
                 case "16":
                     {
                         Console.WriteLine("请输入图片文件路径：");
                         string coverFilePath = Console.ReadLine();
                         ProductImageUpload(coverFilePath);
+                        break;
+                    }
+                //上传稿件封面
+                case "17":
+                    {
+                        Console.WriteLine("请输入OPEN_ID");
+                        string OPENID = Console.ReadLine();
+                        GetChargeOrderData(OPENID);
                         break;
                     }
             }
@@ -582,9 +591,35 @@ namespace OpenPlatformSample
             }
         }
 
+        /// <summary>
+        /// 查询充电记录
+        /// </summary>
+        public static void GetChargeOrderData(string open_id)
+        {
+            var json = @"{
+    ""list"": [
+        {
+            ""open_id"": ""$$$"",
+            ""privilege_type"": []
+        }
+    ],
+    ""source"": ""testm""
+}".Replace("$$$",open_id);
+
+            var url = $"{Signature.MainDomain}/arcopen/fn/common/charge_order_search_list";
+            var reqJson = json;
+            var resp = Signature.SendRequest(url, "POST", AccessToken, reqJson).Result;
+            Console.WriteLine("返回数据:\n");
+            if (JObject.Parse(resp)?["code"]?.ToString() == "0")
+            {
+                WriteLog(resp);
+            }
+        }
+
 
         private static void WriteLog(string response)
         {
+
             using (JsonDocument doc = JsonDocument.Parse(response))
             {
                 // 创建 JsonWriterOptions，设置为格式化输出
