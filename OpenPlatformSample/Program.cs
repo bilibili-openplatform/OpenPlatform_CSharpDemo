@@ -344,6 +344,11 @@ namespace OpenPlatformSample
         /// </summary>
         public static void GetArchiveView()
         {
+            if (string.IsNullOrEmpty(Secrest["resource_id"]))
+            {
+                Console.WriteLine("缺少稿件ID(resource_id)，请输入：");
+                Secrest["resource_id"] = Console.ReadLine();
+            }
             var requestParameters = new Dictionary<string, string?>
             {
                 { "resource_id", Secrest["resource_id"] }
