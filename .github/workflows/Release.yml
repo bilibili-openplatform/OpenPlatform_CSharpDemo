@@ -1,0 +1,71 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "Release*"
+  pull_request:
+    paths:
+      - '!**/README.md'
+  workflow_dispatch:
+
+jobs:
+  OpenPlatformSample:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            runtime: win-x64
+          - os: macOS-latest
+            runtime: osx-arm64
+          - os: ubuntu-latest
+            runtime: linux-x64
+          - os: ubuntu-latest
+            runtime: linux-arm
+          - os: ubuntu-latest
+            runtime: linux-arm64
+          - os: ubuntu-latest
+            runtime: linux-musl-x64
+          - os: ubuntu-latest
+            runtime: linux-musl-arm
+          - os: ubuntu-latest
+            runtime: linux-musl-arm64
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build OpenPlatformSample
+        run: cd OpenPlatformSample && dotnet publish --runtime ${{ matrix.runtime }} --configuration Release --self-contained true --output build_output -p:PublishSingleFile=true -p:PublishTrimmed=true
+
+      - name: Archive production artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: OpenPlatformSample-${{ matrix.os }}-${{ matrix.runtime }}
+          path: OpenPlatformSample/build_output
+
+  Release:
+    needs: [OpenPlatformSample]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: assets
+      - run: |
+          cd assets
+          rm -rf *linux-musl*
+          rm -rf digests*
+          for f in *; do
+            (cd $f && zip -r ../$f-${{ github.ref_name }}.zip .)
+          done
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: assets/*.zip
+          body: | 
+            本Release内容根据自己的环境下载对应版本即可，如果需要调试，请clone项目后自行断点调试。
+          token: ${{ secrets.GH_PAT }}  # 使用仓库 Secrets 中的 PAT
