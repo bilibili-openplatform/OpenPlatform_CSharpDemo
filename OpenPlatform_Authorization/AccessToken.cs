@@ -2,7 +2,7 @@
 
 namespace OpenPlatform_Authorization
 {
-    internal class AccessToken
+    public class AccessToken
     {
         /// <summary>
         /// 通过授权拿到的Code换取AccessToken
@@ -21,9 +21,11 @@ namespace OpenPlatform_Authorization
                 new KeyValuePair<string, string>("grant_type", "authorization_code"),
                 new KeyValuePair<string, string>("code", code)
             });
-            Console.WriteLine($"请求地址：{OpenPlatform_Signature.Signature.ApiDomain}/x/account-oauth2/v1/token");
-            Console.WriteLine($"请求类型：Post");  
-            
+            if (OpenPlatform_Signature.Signature.Printf)
+            {
+                Console.WriteLine($"请求地址：{OpenPlatform_Signature.Signature.ApiDomain}/x/account-oauth2/v1/token");
+                Console.WriteLine($"请求类型：Post");
+            }
             var response = await client.PostAsync($"{OpenPlatform_Signature.Signature.ApiDomain}/x/account-oauth2/v1/token", content);
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadAsStringAsync();

@@ -31,6 +31,22 @@ namespace OpenPlatformSample
             OpenPlatform_Signature.Signature.Client_ID = Signature.IsUAT?Secrest["UAT_Client_ID"]:Secrest["PROD_Client_ID"];//入驻开放平台后，通过并且创建应用完成后，应用的Client_ID（https://open.bilibili.com/company-core）
             OpenPlatform_Signature.Signature.App_Secret = Signature.IsUAT?Secrest["UAT_App_Secret"]:Secrest["PROD_App_Secret"];//入驻开放平台后，通过并且创建应用完成后，应用的App_Secret(https://open.bilibili.com/company-core)
             OpenPlatform_Signature.Signature.ReturnUrl = Signature.IsUAT?Secrest["UAT_ReturnUrl"]:Secrest["PROD_ReturnUrl"];//创建应用后，开发者自行设置的'应用回调域'（https://open.bilibili.com/company-core/{Client_ID}/detail）
+
+            if(string.IsNullOrEmpty(Signature.Client_ID))
+            {
+                Console.WriteLine("请输入Client_ID:");
+                Signature.Client_ID = Console.ReadLine();
+            }
+            if (string.IsNullOrEmpty(Signature.App_Secret))
+            {
+                Console.WriteLine("请输入App_Secret:");
+                Signature.App_Secret = Console.ReadLine();
+            }
+            if (string.IsNullOrEmpty(Signature.ReturnUrl))
+            {
+                Console.WriteLine("请输入应用回调域:");
+                Signature.ReturnUrl = Console.ReadLine();
+            }
         }
 
 
@@ -55,7 +71,6 @@ namespace OpenPlatformSample
 
             while (true)
             {
-                //Console.WriteLine("编号太多了，看Main函数的注释代码");
 
                 //参考这里的代码输入ID执行demo
 

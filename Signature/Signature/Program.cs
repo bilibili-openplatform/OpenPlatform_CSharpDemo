@@ -29,6 +29,9 @@ namespace OpenPlatform_Signature
         public static string ApiDomain = IsUAT ? "https://uat-api.bilibili.com" : "https://api.bilibili.com";
         public static string AccountDomain = IsUAT ? "https://uat-account.bilibili.com" : "https://account.bilibili.com";
 
+        //终端是否打印curl详细信息
+        public static bool Printf = true;
+
         // 常量定义
         internal const string AcceptHeader = "Accept";
         internal const string AuthorizationHeader = "Authorization";
@@ -110,7 +113,8 @@ namespace OpenPlatform_Signature
             var response = await ApiRequest(reqJson, InterfaceUrl, RequestType, AccessToken, filePath, FileByteArray);
             if (response == null)
             {
-                Console.WriteLine("请求失败，网络信息返回为空");
+                if (Printf)
+                    Console.WriteLine("请求失败，网络信息返回为空");
             }
             else
             {
@@ -119,9 +123,11 @@ namespace OpenPlatform_Signature
                     try
                     {
                         if (JObject.Parse(response)?["code"]?.ToString() != "0")
-                            Console.WriteLine($"网络请求出现错误：请求的接口URL为：\n{InterfaceUrl}\ncode：{JObject.Parse(response)?["code"]?.ToString()}\nmessage：{JObject.Parse(response)?["message"]?.ToString()}\nrequest_id：{JObject.Parse(response)?["request_id"]?.ToString()}");
+                            if (Printf)
+                                Console.WriteLine($"网络请求出现错误：请求的接口URL为：\n{InterfaceUrl}\ncode：{JObject.Parse(response)?["code"]?.ToString()}\nmessage：{JObject.Parse(response)?["message"]?.ToString()}\nrequest_id：{JObject.Parse(response)?["request_id"]?.ToString()}");
                         if (isTestEnv)
-                            Console.WriteLine($"\nResponse内容:\n");
+                            if (Printf)
+                                Console.WriteLine($"\nResponse内容:\n");
                         // 解析 JSON 字符串到 JsonDocument
                         using (JsonDocument doc = JsonDocument.Parse(response))
                         {
@@ -150,20 +156,23 @@ namespace OpenPlatform_Signature
 
                                 // 输出格式化后的 JSON 到终端
                                 if (isTestEnv)
-                                    Console.WriteLine(finalOutput);
+                                    if (Printf)
+                                        Console.WriteLine(finalOutput);
                             }
                         }
                     }
                     catch (Exception)
                     {
                         if (isTestEnv)
-                            Console.WriteLine($"\n返回的内容可能不为Json格式，原始内容:\n{response}");
+                            if (Printf)
+                                Console.WriteLine($"\n返回的内容可能不为Json格式，原始内容:\n{response}");
                     }
                 }
                 else
                 {
                     if (isTestEnv)
-                        Console.WriteLine($"\nResponse内容为空\n");
+                        if (Printf)
+                            Console.WriteLine($"\nResponse内容为空\n");
                 }
 
             }
@@ -174,14 +183,16 @@ namespace OpenPlatform_Signature
         // HTTP 请求示例方法
         private static async Task<string> ApiRequest(string reqJson, string InterfaceUrl, string Htpp_Type, string AccessToken = "", string filePath = "", byte[] FileByteArray = null)
         {
-            Console.WriteLine($"请求地址：{InterfaceUrl}");
-            Console.WriteLine($"请求类型：{Htpp_Type}");
-            Console.WriteLine($"请求参数：");
-            if (!string.IsNullOrEmpty(reqJson))
-                Console.WriteLine($"body:\n{reqJson}");
-            else
-                Console.WriteLine($"body为空\n");
-
+            if (Printf)
+            {
+                Console.WriteLine($"请求地址：{InterfaceUrl}");
+                Console.WriteLine($"请求类型：{Htpp_Type}");
+                Console.WriteLine($"请求参数：");
+                if (!string.IsNullOrEmpty(reqJson))
+                    Console.WriteLine($"body:\n{reqJson}");
+                else
+                    Console.WriteLine($"body为空\n");
+            }
 
             var header = new CommonHeader
             {
@@ -199,22 +210,28 @@ namespace OpenPlatform_Signature
             header.Authorization = CreateSignature(header, App_Secret);
 
             var sortedMap = header.ToMap().OrderBy(kvp => kvp.Key).ToList();
-            Console.WriteLine($"Header信息：\n");
+            if (Printf)
+                Console.WriteLine($"Header信息：\n");
             foreach (var item in sortedMap)
             {
-                Console.WriteLine($"{item.Key} = {item.Value}");
+                if (Printf)
+                    Console.WriteLine($"{item.Key} = {item.Value}");
             }
-            Console.WriteLine();
+            if (Printf)
+                Console.WriteLine();
 
             if (isTestEnv)
             {
-                Console.WriteLine($"计算生成的签名：{header.Authorization}\n");
-                Console.WriteLine($"Header信息：\n");
-                foreach (var item in sortedMap)
+                if (Printf)
                 {
-                    Console.WriteLine($"{item.Key}:{item.Value}");
+                    Console.WriteLine($"计算生成的签名：{header.Authorization}\n");
+                    Console.WriteLine($"Header信息：\n");
+                    foreach (var item in sortedMap)
+                    {
+                        Console.WriteLine($"{item.Key}:{item.Value}");
+                    }
+                    Console.WriteLine();
                 }
-                Console.WriteLine();
             }
 
             using (var client = new HttpClient())
@@ -265,7 +282,7 @@ namespace OpenPlatform_Signature
                             // 强制设置 Content-Type 为 application/json
                             requestMessage.Content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
                         }
-                        
+
                     }
                     else
                     {
@@ -276,8 +293,11 @@ namespace OpenPlatform_Signature
                     var jsonResponse = await response.Content.ReadAsStringAsync();
 
                     string curlCommand = GenerateCurlCommand(requestMessage, reqJson, filePath, FileByteArray);
-                    Console.WriteLine("Generated curl command:");
-                    Console.WriteLine(curlCommand);
+                    if (Printf)
+                    {
+                        Console.WriteLine("Generated curl command:");
+                        Console.WriteLine(curlCommand);
+                    }
 
                     return jsonResponse;
                 }
@@ -368,7 +388,8 @@ namespace OpenPlatform_Signature
         {
             var sStr = header.ToSortedString();
             if (isTestEnv)
-                Console.WriteLine($"\n用于计算签名的字符串：\n{sStr}\n");
+                if (Printf)
+                    Console.WriteLine($"\n用于计算签名的字符串：\n{sStr}\n");
             return HmacSHA256(accessKeySecret, sStr);
         }
 
