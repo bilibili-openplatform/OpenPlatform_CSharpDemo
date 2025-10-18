@@ -403,11 +403,21 @@ namespace OpenPlatformSample
         /// </summary>
         public static void ThirdPartyLive_ObtainAuthorizedConnection()
         {
+            if (string.IsNullOrEmpty(Secrest["biz_code"]))
+            {
+                Console.WriteLine("缺少biz_code，请输入：");
+                Secrest["biz_code"] = Console.ReadLine();
+            }
+            if (string.IsNullOrEmpty(Secrest["live_area_id"]))
+            {
+                Console.WriteLine("缺少分区ID，请输入：");
+                Secrest["live_area_id"] = Console.ReadLine();
+            }
             var requestParameters = new Dictionary<string, string?>
             {
-                { "biz_code", "openplatform_demo" },
+                { "biz_code", Secrest["biz_code"] },
                 { "open_id", OpenId },
-                { "live_area_id", "816" },
+                { "live_area_id", Secrest["live_area_id"] },
                 { "third_live_uuid",Guid.NewGuid().ToString("N").Substring(0,31)}
             };
 
