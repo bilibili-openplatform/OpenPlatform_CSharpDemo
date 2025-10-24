@@ -1,21 +1,22 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using OpenPlatform_LiveRoomData.Client;
 using OpenPlatform_LiveRoomData.Client.Data;
 using OpenPlatform_LiveRoomData.Runtime;
 using OpenPlatform_LiveRoomData.Runtime.Data;
 using OpenPlatform_LiveRoomData.Runtime.Utilities;
-using System.ComponentModel;
-using System.Diagnostics.Metrics;
-using System.Text;
 using OpenPlatform_Signature;
-using System.Diagnostics;
-using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json.Linq;
-using System.Text.Json;
-using System.Net.Http.Headers;
 using System;
-using System.Xml.Linq;
 using System.Collections;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Diagnostics.Metrics;
+using System.Net.Http.Headers;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+using System.Xml.Linq;
 
 namespace OpenPlatformSample
 {
@@ -31,6 +32,7 @@ namespace OpenPlatformSample
             OpenPlatform_Signature.Signature.Client_ID = Signature.IsUAT?Secrest["UAT_Client_ID"]:Secrest["PROD_Client_ID"];//入驻开放平台后，通过并且创建应用完成后，应用的Client_ID（https://open.bilibili.com/company-core）
             OpenPlatform_Signature.Signature.App_Secret = Signature.IsUAT?Secrest["UAT_App_Secret"]:Secrest["PROD_App_Secret"];//入驻开放平台后，通过并且创建应用完成后，应用的App_Secret(https://open.bilibili.com/company-core)
             OpenPlatform_Signature.Signature.ReturnUrl = Signature.IsUAT?Secrest["UAT_ReturnUrl"]:Secrest["PROD_ReturnUrl"];//创建应用后，开发者自行设置的'应用回调域'（https://open.bilibili.com/company-core/{Client_ID}/detail）
+            //UAT-zbcs088
 
             if(string.IsNullOrEmpty(Signature.Client_ID))
             {
@@ -92,6 +94,7 @@ namespace OpenPlatformSample
                 Console.WriteLine("15.大会员-二次元通行证信息查询");
                 Console.WriteLine("16.商业化-电商-商品模块-上传图片");
                 Console.WriteLine("17.查询充电记录");
+                Console.WriteLine("18.直播弹幕发送");
                 Console.Write("输入编号选择执行的demo功能：");
                 string code = Console.ReadLine();
                 Console.WriteLine("\r执行结果:");
@@ -262,6 +265,19 @@ namespace OpenPlatformSample
                         Console.WriteLine("请输入OPEN_ID");
                         string OPENID = Console.ReadLine();
                         GetChargeOrderData(OPENID);
+                        break;
+                    }
+                case "18":
+                    {
+                        Console.WriteLine("目标直播间房间长号");
+                        string room_id = Console.ReadLine();
+                        Console.WriteLine("发送人open_id");
+                        string open_id = Console.ReadLine();
+                        Console.WriteLine("弹幕消息内容，最长40个字");
+                        string msg = Console.ReadLine();
+                        Console.WriteLine("要@的用户的open_id，不at留空");
+                        string reply_open_id = Console.ReadLine();
+                        Live_Danma_Send(long.Parse(room_id), open_id, msg, reply_open_id);
                         break;
                     }
             }
@@ -640,6 +656,35 @@ namespace OpenPlatformSample
             var reqJson = json;
             var resp = Signature.SendRequest(url, "POST", AccessToken, reqJson).Result;
             Console.WriteLine("返回数据:\n");
+            if (JObject.Parse(resp)?["code"]?.ToString() == "0")
+            {
+                WriteLog(resp);
+            }
+        }
+
+        /// <summary>
+        /// 直播弹幕发送
+        /// </summary>
+        /// <param name="room_id">目标房间</param>
+        /// <param name="open_id">发送人的open_id</param>
+        /// <param name="msg">发送的消息</param>
+        /// <param name="reply_open_id">被@的人</param>
+        public static void Live_Danma_Send(long room_id,string open_id, string msg,string reply_open_id)
+        {
+            var requestParameters = new Dictionary<string, string?>
+            {
+                { "source", "2" },//其他应用固定填2
+                { "room_id", room_id.ToString()},
+                { "open_id", open_id },
+                { "msg", msg.ToString()}
+            };
+            if(!string.IsNullOrEmpty(reply_open_id))
+            {
+                requestParameters.Add("reply_open_id", reply_open_id);
+            }
+            var url = $"{Signature.MainDomain}/arcopen/fn/common/live_send_msg";
+            var reqJson = JsonConvert.SerializeObject(requestParameters);
+            var resp = Signature.SendRequest(url, "POST", AccessToken, reqJson).Result;
             if (JObject.Parse(resp)?["code"]?.ToString() == "0")
             {
                 WriteLog(resp);
