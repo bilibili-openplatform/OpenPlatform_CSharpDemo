@@ -206,7 +206,6 @@ namespace OpenPlatform_Signature
                 ContentMD5 = Md5(reqJson),
                 AccessToken = AccessToken
             };
-
             header.Authorization = CreateSignature(header, App_Secret);
 
             var sortedMap = header.ToMap().OrderBy(kvp => kvp.Key).ToList();
@@ -245,7 +244,7 @@ namespace OpenPlatform_Signature
                     {
                         requestMessage.Headers.Add(kvp.Key, kvp.Value);
                     }
-
+                    requestMessage.Headers.Add("x1-bilispy-color", "send_msg_internal");
                     // 设置文件内容作为请求体
                     if ((!string.IsNullOrEmpty(filePath) && File.Exists(filePath)) || FileByteArray != null)
                     {

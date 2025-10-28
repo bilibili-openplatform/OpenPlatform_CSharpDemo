@@ -267,17 +267,16 @@ namespace OpenPlatformSample
                         GetChargeOrderData(OPENID);
                         break;
                     }
+                //直播弹幕发送
                 case "18":
                     {
                         Console.WriteLine("目标直播间房间长号");
                         string room_id = Console.ReadLine();
-                        Console.WriteLine("发送人open_id");
-                        string open_id = Console.ReadLine();
                         Console.WriteLine("弹幕消息内容，最长40个字");
                         string msg = Console.ReadLine();
                         Console.WriteLine("要@的用户的open_id，不at留空");
                         string reply_open_id = Console.ReadLine();
-                        Live_Danma_Send(long.Parse(room_id), open_id, msg, reply_open_id);
+                        Live_Danma_Send(long.Parse(room_id), OpenId, msg, reply_open_id);
                         break;
                     }
             }
@@ -671,23 +670,37 @@ namespace OpenPlatformSample
         /// <param name="reply_open_id">被@的人</param>
         public static void Live_Danma_Send(long room_id,string open_id, string msg,string reply_open_id)
         {
-            var requestParameters = new Dictionary<string, string?>
+            Send_Danma_Class send_Danma_Class = new Send_Danma_Class
             {
-                { "source", "2" },//其他应用固定填2
-                { "room_id", room_id.ToString()},
-                { "open_id", open_id },
-                { "msg", msg.ToString()}
+                room_id = room_id,
+                open_id= open_id,
+                msg=msg,
+                source= 2
             };
-            if(!string.IsNullOrEmpty(reply_open_id))
+            if (!string.IsNullOrEmpty(reply_open_id))
             {
-                requestParameters.Add("reply_open_id", reply_open_id);
+                send_Danma_Class.reply_info.reply_open_id = reply_open_id;
             }
+
             var url = $"{Signature.MainDomain}/arcopen/fn/common/live_send_msg";
-            var reqJson = JsonConvert.SerializeObject(requestParameters);
+            var reqJson = JsonConvert.SerializeObject(send_Danma_Class);
             var resp = Signature.SendRequest(url, "POST", AccessToken, reqJson).Result;
             if (JObject.Parse(resp)?["code"]?.ToString() == "0")
             {
                 WriteLog(resp);
+            }
+        }
+
+        public class Send_Danma_Class
+        {
+            public int source { get; set; } = 2;
+            public long room_id { get; set; }
+            public string open_id { get; set; }
+            public string msg { get; set; }
+            public ReplyInfo reply_info { get; set; } = new();
+            public class ReplyInfo
+            {
+                public string reply_open_id { get; set; }
             }
         }
 
