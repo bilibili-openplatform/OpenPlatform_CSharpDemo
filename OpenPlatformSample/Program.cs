@@ -662,7 +662,7 @@ namespace OpenPlatformSample
         }
 
         /// <summary>
-        /// 直播弹幕发送
+        /// 直播弹幕发送（需申请权限）
         /// </summary>
         /// <param name="room_id">目标房间</param>
         /// <param name="open_id">发送人的open_id</param>
