@@ -667,7 +667,7 @@ namespace OpenPlatformSample
         /// <param name="room_id">目标房间</param>
         /// <param name="open_id">发送人的open_id</param>
         /// <param name="msg">发送的消息</param>
-        /// <param name="reply_open_id">被@的人</param>
+        /// <param name="reply_open_id">被@人的open_id</param>
         public static void Live_Danma_Send(long room_id,string open_id, string msg,string reply_open_id)
         {
             Send_Danma_Class send_Danma_Class = new Send_Danma_Class
