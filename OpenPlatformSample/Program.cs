@@ -32,7 +32,18 @@ namespace OpenPlatformSample
             OpenPlatform_Signature.Signature.Client_ID = Signature.IsUAT?Secrest["UAT_Client_ID"]:Secrest["PROD_Client_ID"];//入驻开放平台后，通过并且创建应用完成后，应用的Client_ID（https://open.bilibili.com/company-core）
             OpenPlatform_Signature.Signature.App_Secret = Signature.IsUAT?Secrest["UAT_App_Secret"]:Secrest["PROD_App_Secret"];//入驻开放平台后，通过并且创建应用完成后，应用的App_Secret(https://open.bilibili.com/company-core)
             OpenPlatform_Signature.Signature.ReturnUrl = Signature.IsUAT?Secrest["UAT_ReturnUrl"]:Secrest["PROD_ReturnUrl"];//创建应用后，开发者自行设置的'应用回调域'（https://open.bilibili.com/company-core/{Client_ID}/detail）
+
+
+            /*--------------使用前请按修改以上内容--------------*/
+            /*-------请将以上内容修改为对应的应用配置信息--------*/
+
+
             //UAT-zbcs088
+            OpenPlatform_Signature.Signature.Access_Token = Signature.IsUAT ? Secrest["UAT_AccessToken"] : Secrest["PROD_AccessToken"];
+            OpenPlatform_Signature.Signature.Open_ID = Signature.IsUAT ? Secrest["UAT_OpenId"] : Secrest["PROD_OpenId"];
+
+
+            tmp.ReadSecurityConfig();
 
             if(string.IsNullOrEmpty(Signature.Client_ID))
             {
@@ -49,22 +60,31 @@ namespace OpenPlatformSample
                 Console.WriteLine("请输入应用回调域:");
                 Signature.ReturnUrl = Console.ReadLine();
             }
+            if (string.IsNullOrEmpty(Signature.Access_Token))
+            {
+                Console.WriteLine("请输入Access_Token:");
+                Signature.Access_Token = Console.ReadLine();
+            }
+            if (string.IsNullOrEmpty(Signature.Open_ID))
+            {
+                Console.WriteLine("请输入Open_ID:");
+                Signature.Open_ID = Console.ReadLine();
+            }
+
+            AccessToken = Signature.Access_Token;
+            OpenId = Signature.Open_ID;
         }
 
 
 
 
-        /*--------------使用前请按修改以上内容--------------*/
-        /*-------请将以上内容修改为对应的应用配置信息--------*/
+       
 
 
         //用于读取机密信息的接口对象
         private static IConfigurationRoot Secrest = new ConfigurationBuilder().AddUserSecrets<Program>().Build();
-        private static string AccessToken = Signature.IsUAT?Secrest["UAT_AccessToken"]:Secrest["PROD_AccessToken"];
-        private static string OpenId = Signature.IsUAT?Secrest["UAT_OpenId"]:Secrest["PROD_OpenId"];
-
-     
-
+        private static string AccessToken = string.Empty;//授权获取到的AccessToken
+        private static string OpenId = string.Empty;//授权账号的open_id
 
         public static void Main(string[] args)
         {
@@ -259,12 +279,10 @@ namespace OpenPlatformSample
                         ProductImageUpload(coverFilePath);
                         break;
                     }
-                //上传稿件封面
+                //查询充电记录
                 case "17":
                     {
-                        Console.WriteLine("请输入OPEN_ID");
-                        string OPENID = Console.ReadLine();
-                        GetChargeOrderData(OPENID);
+                        GetChargeOrderData(OpenId);
                         break;
                     }
                 //直播弹幕发送
@@ -673,9 +691,9 @@ namespace OpenPlatformSample
             Send_Danma_Class send_Danma_Class = new Send_Danma_Class
             {
                 room_id = room_id,
-                open_id= open_id,
-                msg=msg,
-                source= 2
+                open_id = open_id,
+                msg = msg,
+                source = 2
             };
             if (!string.IsNullOrEmpty(reply_open_id))
             {

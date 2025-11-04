@@ -33,6 +33,9 @@ namespace OpenPlatform_Signature
         //终端是否打印curl详细信息
         public static bool Printf = true;
 
+
+        public static string Open_ID = "";
+        public static string Access_Token = "";
         // 常量定义
         internal const string AcceptHeader = "Accept";
         internal const string AuthorizationHeader = "Authorization";
