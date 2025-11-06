@@ -37,8 +37,6 @@ namespace OpenPlatformSample
                 OpenPlatform_Signature.Signature.ReturnUrl = Signature.IsUAT ? config.UAT_ReturnUrl : config.PROD_ReturnUrl;
                 OpenPlatform_Signature.Signature.Access_Token = Signature.IsUAT ? config.UAT_AccessToken : config.PROD_AccessToken;
                 OpenPlatform_Signature.Signature.Open_ID = Signature.IsUAT ? config.UAT_OpenId : config.PROD_OpenId;
-
-
                 return;
             }
             catch (Exception ex)
@@ -48,6 +46,7 @@ namespace OpenPlatformSample
         }
         public class SecurityConfig
         {
+            public bool UAT { get; set; } = false;
             public string PROD_Client_ID { get; set; }
             public string PROD_App_Secret { get; set; }
             public string PROD_ReturnUrl { get; set; }

@@ -60,15 +60,21 @@ namespace OpenPlatformSample
                 Console.WriteLine("请输入应用回调域:");
                 Signature.ReturnUrl = Console.ReadLine();
             }
+
+
             if (string.IsNullOrEmpty(Signature.Access_Token))
             {
-                Console.WriteLine("请输入Access_Token:");
-                Signature.Access_Token = Console.ReadLine();
+                Console.WriteLine("当前Access_Token为空，请输入Access_Token，或者直接回车跳过，选择“1.账号授权”获取Access_Token");
+
+                //Console.WriteLine("请输入Access_Token:");
+                //Signature.Access_Token = Console.ReadLine();
             }
             if (string.IsNullOrEmpty(Signature.Open_ID))
             {
-                Console.WriteLine("请输入Open_ID:");
-                Signature.Open_ID = Console.ReadLine();
+                Console.WriteLine("Open_ID，Open_ID，或者直接回车跳过，选择“1.账号授权”Open_ID");
+
+                //Console.WriteLine("请输入Open_ID:");
+                //Signature.Open_ID = Console.ReadLine();
             }
 
             AccessToken = Signature.Access_Token;
@@ -115,6 +121,7 @@ namespace OpenPlatformSample
                 Console.WriteLine("16.商业化-电商-商品模块-上传图片");
                 Console.WriteLine("17.查询充电记录");
                 Console.WriteLine("18.直播弹幕发送");
+                Console.WriteLine("19.用订单号查询课堂订单信息");
                 Console.Write("输入编号选择执行的demo功能：");
                 string code = Console.ReadLine();
                 Console.WriteLine("\r执行结果:");
@@ -153,13 +160,13 @@ namespace OpenPlatformSample
                         AccountAuthorization();
                         break;
                     }
-                //直播能力-获取直播长连消息
+                //直播能力-获取直播长连消息（需单独联系申请权限）
                 case "2":
                     {
                         Live.Live.Start(AccessToken);
                         break;
                     }
-                //直播能力-获取直播间基础信息
+                //直播能力-获取直播间基础信息（需单独联系申请权限）
                 case "3":
                     {
                         GetRoomInfo();
@@ -183,7 +190,7 @@ namespace OpenPlatformSample
                         GetArchiveViewList();
                         break;
                     }
-                //三方一键开播-获取第三方开播授权链接
+                //三方一键开播-获取第三方开播授权链接（需单独联系申请权限）
                 case "7":
                     {
                         ThirdPartyLive_ObtainAuthorizedConnection();
@@ -265,7 +272,7 @@ namespace OpenPlatformSample
                         VideoManuscriptSubmission(uploadToken, title, cover, tid, tag, copyRight, source);
                         break;
                     }
-                //获取大会员-二次元通行证信息
+                //获取大会员-二次元通行证信息（需单独联系申请权限）
                 case "15":
                     {
                         GetAnimeUserValid();
@@ -279,13 +286,13 @@ namespace OpenPlatformSample
                         ProductImageUpload(coverFilePath);
                         break;
                     }
-                //查询充电记录
+                //查询充电记录（需单独联系申请权限）
                 case "17":
                     {
                         GetChargeOrderData(OpenId);
                         break;
                     }
-                //直播弹幕发送
+                //直播弹幕发送（需单独联系申请权限）
                 case "18":
                     {
                         Console.WriteLine("目标直播间房间长号");
@@ -295,6 +302,16 @@ namespace OpenPlatformSample
                         Console.WriteLine("要@的用户的open_id，不at留空");
                         string reply_open_id = Console.ReadLine();
                         Live_Danma_Send(long.Parse(room_id), OpenId, msg, reply_open_id);
+                        break;
+                    }
+                //用订单号查询课堂订单信息（需单独联系申请权限）
+                case "19":
+                    {
+                        Console.WriteLine("输入订单号：");
+                        string order_no = Console.ReadLine();
+                        Console.WriteLine("输入购课订单对应的up主open_id");
+                        string up_open_id = Console.ReadLine();
+                        by_orderno_for_course_order(order_no, up_open_id);
                         break;
                     }
             }
@@ -325,7 +342,7 @@ namespace OpenPlatformSample
         }
 
         /// <summary>
-        /// 获取直播间基础信息
+        /// 获取直播间基础信息（需单独联系申请权限）
         /// </summary>
         /// <returns></returns>
         public static void GetRoomInfo()
@@ -432,7 +449,7 @@ namespace OpenPlatformSample
         }
 
         /// <summary>
-        /// 获取第三方开播授权链接
+        /// 获取第三方开播授权链接（需单独联系申请权限）
         /// </summary>
         public static void ThirdPartyLive_ObtainAuthorizedConnection()
         {
@@ -471,7 +488,7 @@ namespace OpenPlatformSample
         }
 
         /// <summary>
-        /// 获取大会员-二次元通行证信息
+        /// 获取大会员-二次元通行证信息（需单独联系申请权限）
         /// </summary>
         public static void GetAnimeUserValid()
         {
@@ -641,7 +658,7 @@ namespace OpenPlatformSample
         }
 
         /// <summary>
-        /// 商业化-电商-商品模块-上传图片
+        /// 商业化-电商-商品模块-上传图片（需单独联系申请权限）
         /// </summary>
         /// <param name="FilePath">图片文件路径</param>
         public static void ProductImageUpload(string FilePath)
@@ -680,7 +697,7 @@ namespace OpenPlatformSample
         }
 
         /// <summary>
-        /// 直播弹幕发送（需申请权限）
+        /// 直播弹幕发送（需单独联系申请权限）
         /// </summary>
         /// <param name="room_id">目标房间</param>
         /// <param name="open_id">发送人的open_id</param>
@@ -693,7 +710,7 @@ namespace OpenPlatformSample
                 room_id = room_id,
                 open_id = open_id,
                 msg = msg,
-                source = 2
+                source = 1
             };
             if (!string.IsNullOrEmpty(reply_open_id))
             {
@@ -702,6 +719,26 @@ namespace OpenPlatformSample
 
             var url = $"{Signature.MainDomain}/arcopen/fn/common/live_send_msg";
             var reqJson = JsonConvert.SerializeObject(send_Danma_Class);
+            var resp = Signature.SendRequest(url, "POST", AccessToken, reqJson).Result;
+            if (JObject.Parse(resp)?["code"]?.ToString() == "0")
+            {
+                WriteLog(resp);
+            }
+        }
+
+        /// <summary>
+        /// 用订单号查询课堂订单信息（需单独联系申请权限）
+        /// </summary>
+        public static void by_orderno_for_course_order(string order_no, string up_open_id)
+        {
+            var requestParameters = new Dictionary<string, object?>
+            {
+                { "order_no", order_no },
+                { "up_open_id", up_open_id}
+            };
+
+            var url = $"{Signature.MainDomain}/arcopen/fn/common/by_orderno_for_course_order";
+            var reqJson = JsonConvert.SerializeObject(requestParameters);
             var resp = Signature.SendRequest(url, "POST", AccessToken, reqJson).Result;
             if (JObject.Parse(resp)?["code"]?.ToString() == "0")
             {
