@@ -729,6 +729,8 @@ namespace OpenPlatformSample
         /// <summary>
         /// 用订单号查询课堂订单信息（需单独联系申请权限）
         /// </summary>
+        /// <param name="order_no">购课订单号</param>
+        /// <param name="up_open_id">购课订单对应的up主的open_id</param>
         public static void by_orderno_for_course_order(string order_no, string up_open_id)
         {
             var requestParameters = new Dictionary<string, object?>
