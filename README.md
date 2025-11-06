@@ -37,12 +37,12 @@
 - secrets.json示例内容：
 ```json
 {
-  "AccessToken": "",//用户授权后使用code兑换的token信息
-  "OpenId": "",//使用token查询到的该用户的open_id
-  "Client_ID": "",//应用的Client_ID
-  "App_Secret": "",//应用的App_Secret
-  "ReturnUrl": "",//应用配置的'应用回调域'
-  "resource_id": ""//方便用于查询，对应open_id用户名下的稿件BV号
+  "PROD_Client_ID": "af6cdfebdd5448c5",
+  "PROD_App_Secret": "452e84f46fcb485fa328e00cee893061",
+  "PROD_ReturnUrl": "https://open.bilibili.com",
+  "PROD_AccessToken": "defd06eff3d20b4c745d36eed9310bb1",
+  "PROD_OpenId": "a48766fe88254883b815e78b0bdf4d31"
 }
 ```
 
+- 同时也支持本地配置文件形式，将上面json示例内容修改为自己的应用和token信息后保存为`./config/secrets.json`然后启动程序。
