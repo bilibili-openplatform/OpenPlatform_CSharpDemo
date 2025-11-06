@@ -301,7 +301,7 @@ namespace OpenPlatformSample
                         string msg = Console.ReadLine();
                         Console.WriteLine("要@的用户的open_id，不at留空");
                         string reply_open_id = Console.ReadLine();
-                        Live_Danma_Send(long.Parse(room_id), OpenId, msg, reply_open_id);
+                        LiveDanmaSend(long.Parse(room_id), OpenId, msg, reply_open_id);
                         break;
                     }
                 //用订单号查询课堂订单信息（需单独联系申请权限）
@@ -311,7 +311,7 @@ namespace OpenPlatformSample
                         string order_no = Console.ReadLine();
                         Console.WriteLine("输入购课订单对应的up主open_id");
                         string up_open_id = Console.ReadLine();
-                        by_orderno_for_course_order(order_no, up_open_id);
+                        ByOrdernoForCourseOrder(order_no, up_open_id);
                         break;
                     }
             }
@@ -703,7 +703,7 @@ namespace OpenPlatformSample
         /// <param name="open_id">发送人的open_id</param>
         /// <param name="msg">发送的消息</param>
         /// <param name="reply_open_id">被@人的open_id</param>
-        public static void Live_Danma_Send(long room_id,string open_id, string msg,string reply_open_id)
+        public static void LiveDanmaSend(long room_id,string open_id, string msg,string reply_open_id)
         {
             Send_Danma_Class send_Danma_Class = new Send_Danma_Class
             {
@@ -731,7 +731,7 @@ namespace OpenPlatformSample
         /// </summary>
         /// <param name="order_no">购课订单号</param>
         /// <param name="up_open_id">购课订单对应的up主的open_id</param>
-        public static void by_orderno_for_course_order(string order_no, string up_open_id)
+        public static void ByOrdernoForCourseOrder(string order_no, string up_open_id)
         {
             var requestParameters = new Dictionary<string, object?>
             {

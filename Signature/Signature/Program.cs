@@ -114,7 +114,11 @@ namespace OpenPlatform_Signature
         /// <returns></returns>
         public static async Task<string> SendRequest(string InterfaceUrl, string RequestType, string AccessToken, string reqJson = "", string filePath = "", byte[] FileByteArray = null)
         {
+            //进行签名，并发起请求
             var response = await ApiRequest(reqJson, InterfaceUrl, RequestType, AccessToken, filePath, FileByteArray);
+
+
+
             if (response == null)
             {
                 if (Printf)
