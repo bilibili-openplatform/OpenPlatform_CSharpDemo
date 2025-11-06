@@ -16,7 +16,7 @@ namespace OpenPlatformSample
         /// </summary>
         /// <param name="filePath"></param>
         /// <returns></returns>
-        public static void ReadSecurityConfig(string filePath = "./config/sec.json")
+        public static void ReadSecurityConfig(string filePath = "./config/secrets.json")
         {
             try
             {
