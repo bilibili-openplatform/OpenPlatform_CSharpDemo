@@ -122,6 +122,7 @@ namespace OpenPlatformSample
                 Console.WriteLine("17.查询充电记录");
                 Console.WriteLine("18.直播弹幕发送");
                 Console.WriteLine("19.用订单号查询课堂订单信息");
+                Console.WriteLine("20.电商获取文件预授权上传地址");
                 Console.Write("输入编号选择执行的demo功能：");
                 string code = Console.ReadLine();
                 Console.WriteLine("\r执行结果:");
@@ -312,6 +313,24 @@ namespace OpenPlatformSample
                         Console.WriteLine("输入购课订单对应的up主open_id");
                         string up_open_id = Console.ReadLine();
                         ByOrdernoForCourseOrder(order_no, up_open_id);
+                        break;
+                    }
+                //电商获取文件预授权上传地址（需单独联系申请权限）
+                case "20":
+                    {
+                        Console.WriteLine("输入文件名：");
+                        string name = Console.ReadLine();
+                        Console.WriteLine("输入文件长度（buye）：");
+                        long size= long.Parse(Console.ReadLine());
+                        Console.WriteLine("输入文件拓展名：");
+                        string extension = Console.ReadLine();
+                        market_get_upload_url(name, size, extension);
+                        break;
+                    }
+
+                case "99":
+                    {
+                        test("/arcopen/fn/common/market_add_customization_product", @"{""item_id"":13439757,""price"":600,""ext_property"":{""extra"":[{""name"":""商品编号"",""value"":""8605251"",""key"":""outItemId"",""type"":""text""},{""name"":""商品名称"",""value"":""B站测试商品"",""key"":""outItemName"",""type"":""text""},{""name"":""游戏名称"",""value"":""王者荣耀"",""key"":""gameTitle"",""type"":""text""},{""name"":""系统信息"",""value"":""安卓微信-1-10区"",""key"":""serverTitle"",""type"":""text""},{""name"":""商品价格"",""value"":""600"",""key"":""price"",""type"":""text""},{""name"":""商品图片"",""value"":""https://test-oss.kejinshou.com/facade/2025/10/3/8e87b61edf5547ca82a5afb98ce933e17800.png"",""key"":""imgs"",""type"":""image""},{""name"":""商品简介"",""value"":""{\""皮肤数\"":\""32\"",\""典藏皮肤数\"":\""13\"",\""无双皮肤数\"":\""32\"",\""珍品传说皮肤数\"":\""23\"",\""传说皮肤数\"":\""32\"",\""史诗皮肤数\"":\""32\"",\""英雄数\"":\""31\""}"",""key"":""property"",""type"":""text""},{""name"":""订单编号"",""value"":""8562339"",""key"":""outOrderId"",""type"":""text""}]}}");
                         break;
                     }
             }
@@ -748,6 +767,44 @@ namespace OpenPlatformSample
             }
         }
 
+        /// <summary>
+        /// 电商获取文件预授权上传地址
+        /// </summary>
+        /// <param name="name">文件名</param>
+        /// <param name="size">文件大小</param>
+        /// <param name="extension">文件拓展名</param>
+        public static void market_get_upload_url(string name, long size,string extension)
+        {
+            var requestParameters = new Dictionary<string, object?>
+            {
+                { "name", name },
+                { "size", size},
+                { "extension", extension}
+            };
+
+            var url = $"{Signature.MainDomain}/arcopen/fn/common/market_get_upload_url";
+            var reqJson = JsonConvert.SerializeObject(requestParameters);
+            var resp = Signature.SendRequest(url, "POST", AccessToken, reqJson).Result;
+            if (JObject.Parse(resp)?["code"]?.ToString() == "0")
+            {
+                WriteLog(resp);
+            }
+        }
+
+
+        public static void test(string api_url,string json)
+        {
+            tmp.UploadFileAsync("C:\\Users\\kuanh\\Desktop\\test.png", "https://boss-shjd.biliapi.net/mall-fulfillment-attachment/10343300/bfcd8db528eb4aaab5ca2929ffc087f8/fe396ed7532948deb54ef4023fb681c11461.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20251121T110836Z&X-Amz-SignedHeaders=host&X-Amz-Credential=sIkx0jM33jrNv6ED%2F20251121%2Fboss%2Fs3%2Faws4_request&X-Amz-Expires=1000&X-Amz-Signature=37d81a8dbcb05111ca8027b7819447c0bb48334202cbe0db03c77cc6c630e5dd");
+            //var url = $"{Signature.MainDomain}{api_url}";
+            //var reqJson = json;
+            //var resp = Signature.SendRequest(url, "POST", AccessToken, reqJson).Result;
+            //if (JObject.Parse(resp)?["code"]?.ToString() == "0")
+            //{
+            //    WriteLog(resp);
+            //}
+        }
+
+
         public class Send_Danma_Class
         {
             public int source { get; set; } = 2;
@@ -790,6 +847,8 @@ namespace OpenPlatformSample
                     string finalOutput = System.Text.Json.JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
 
                     // 输出格式化后的 JSON 到终端
+                    Console.WriteLine("\nResponse:");
+
                     Console.WriteLine(finalOutput);
                 }
             }

@@ -362,15 +362,20 @@ namespace OpenPlatform_Signature
             // 添加 URL
             curlCommand.Append("\"").Append(requestMessage.RequestUri).Append("\" ");
 
-            // 添加请求头
+            // 添加请求头（不包括内容头）
             foreach (var header in requestMessage.Headers)
             {
                 curlCommand.Append("\r\n-H \"").Append(header.Key).Append(": ").Append(string.Join(", ", header.Value)).Append("\" ");
             }
 
-            // 添加请求体
+            // 添加内容头（包括 Content-Type）
             if (requestMessage.Content != null)
             {
+                foreach (var header in requestMessage.Content.Headers)
+                {
+                    curlCommand.Append("\r\n-H \"").Append(header.Key).Append(": ").Append(string.Join(", ", header.Value)).Append("\" ");
+                }
+
                 if (requestMessage.Content is MultipartFormDataContent)
                 {
                     if (!string.IsNullOrEmpty(filePath) || FileByteArray != null)
@@ -379,18 +384,20 @@ namespace OpenPlatform_Signature
                     }
                     if (!string.IsNullOrEmpty(reqJson))
                     {
-                        curlCommand.Append("\r\n-F \"json=").Append(reqJson).Append("\" ");
+                        // 对 JSON 内容进行转义，确保在命令行中正确显示
+                        var escapedJson = reqJson.Replace("\"", "\\\"");
+                        curlCommand.Append("\r\n-F \"json=").Append(escapedJson).Append("\" ");
                     }
                 }
                 else
                 {
-                    curlCommand.Append("\r\n-d \"").Append(reqJson).Append("\" ");
+                    // 对于非 multipart 内容，使用 -d 参数
+                    curlCommand.Append("\r\n-d \"").Append(reqJson?.Replace("\"", "\\\"")).Append("\" ");
                 }
             }
 
             return curlCommand.ToString();
         }
-
 
         // 生成Authorization加密串
         private static string CreateSignature(CommonHeader header, string accessKeySecret)
