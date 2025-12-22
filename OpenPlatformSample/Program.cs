@@ -29,55 +29,50 @@ namespace OpenPlatformSample
         /// </summary>
         public static void Init()
         {
-            OpenPlatform_Signature.Signature.Client_ID = Signature.IsUAT?Secrest["UAT_Client_ID"]:Secrest["PROD_Client_ID"];//入驻开放平台后，通过并且创建应用完成后，应用的Client_ID（https://open.bilibili.com/company-core）
-            OpenPlatform_Signature.Signature.App_Secret = Signature.IsUAT?Secrest["UAT_App_Secret"]:Secrest["PROD_App_Secret"];//入驻开放平台后，通过并且创建应用完成后，应用的App_Secret(https://open.bilibili.com/company-core)
-            OpenPlatform_Signature.Signature.ReturnUrl = Signature.IsUAT?Secrest["UAT_ReturnUrl"]:Secrest["PROD_ReturnUrl"];//创建应用后，开发者自行设置的'应用回调域'（https://open.bilibili.com/company-core/{Client_ID}/detail）
+            /*--------------使用前请按修改以下内容--------------*/
+
+            /*
+             * 如果没有应用信息，请前往哔哩哔哩开放平台（https://open.bilibili.com/）入驻并创建应用，获取对应的应用信息
+             * 
+             * 如果希望快捷复用相关配置信息，可以留空这几个字符串，使用VS自带的用户机密进行敏感信息管理。
+             * secrets.json示例内容：
+             * {
+                    "PROD_Client_ID": "af6cdfebdd5448c5",
+                    "PROD_App_Secret": "452e84f46fcb485fa328e00cee893061",
+                    "PROD_ReturnUrl": "https://open.bilibili.com",
+                    "PROD_AccessToken": "defd06eff3d20b4c745d36eed9310bb1",
+                    "PROD_OpenId": "a48766fe88254883b815e78b0bdf4d31"
+                }
+             * 同时也支持本地配置文件形式，将上面json示例内容修改为自己的应用和token信息后保存为./config/secrets.json然后启动程序。
+             */
+
+            Signature.Client_ID = "";//入驻开放平台后，通过并且创建应用完成后，应用的Client_ID（https://open.bilibili.com/company-core）
+            Signature.App_Secret = "";//入驻开放平台后，通过并且创建应用完成后，应用的App_Secret(https://open.bilibili.com/company-core)
+            Signature.ReturnUrl = "";//创建应用后，开发者自行设置的'应用回调域'（https://open.bilibili.com/company-core/{Client_ID}/detail）
 
 
-            /*--------------使用前请按修改以上内容--------------*/
-            /*-------请将以上内容修改为对应的应用配置信息--------*/
+            /*-------请将以上内容修改为对应的应用配置信息，如果需要使用`机密信息`or`配置文件，以上三个字符串变量请留空`--------*/
 
 
-            //UAT-zbcs088
-            OpenPlatform_Signature.Signature.Access_Token = Signature.IsUAT ? Secrest["UAT_AccessToken"] : Secrest["PROD_AccessToken"];
-            OpenPlatform_Signature.Signature.Open_ID = Signature.IsUAT ? Secrest["UAT_OpenId"] : Secrest["PROD_OpenId"];
+            
+            if (string.IsNullOrEmpty(Signature.Client_ID))
+                Signature.Client_ID = Signature.IsUAT ? Secrest["UAT_Client_ID"] : Secrest["PROD_Client_ID"];
+            if (string.IsNullOrEmpty(Signature.App_Secret))
+                Signature.App_Secret = Signature.IsUAT ? Secrest["UAT_App_Secret"] : Secrest["PROD_App_Secret"];
+            if (string.IsNullOrEmpty(Signature.ReturnUrl))
+                Signature.ReturnUrl = Signature.IsUAT ? Secrest["UAT_ReturnUrl"] : Secrest["PROD_ReturnUrl"];
+            Signature.Access_Token = Signature.IsUAT ? Secrest["UAT_AccessToken"] : Secrest["PROD_AccessToken"];
+            Signature.Open_ID = Signature.IsUAT ? Secrest["UAT_OpenId"] : Secrest["PROD_OpenId"];
 
-            Signature.IsUAT = false;
+
 
             tmp.ReadSecurityConfig();
 
-            if(string.IsNullOrEmpty(Signature.Client_ID))
+            if (string.IsNullOrEmpty(Signature.Client_ID) || string.IsNullOrEmpty(Signature.App_Secret) || string.IsNullOrEmpty(Signature.ReturnUrl))
             {
-                Console.WriteLine("请输入Client_ID:");
-                Signature.Client_ID = Console.ReadLine();
+                Console.WriteLine("未检测到应用信息，请确保已输入应用信息");
+                return;
             }
-            if (string.IsNullOrEmpty(Signature.App_Secret))
-            {
-                Console.WriteLine("请输入App_Secret:");
-                Signature.App_Secret = Console.ReadLine();
-            }
-            if (string.IsNullOrEmpty(Signature.ReturnUrl))
-            {
-                Console.WriteLine("请输入应用回调域:");
-                Signature.ReturnUrl = Console.ReadLine();
-            }
-
-
-            if (string.IsNullOrEmpty(Signature.Access_Token))
-            {
-                Console.WriteLine("当前Access_Token为空，请输入Access_Token，或者直接回车跳过，选择“1.账号授权”获取Access_Token");
-
-                //Console.WriteLine("请输入Access_Token:");
-                //Signature.Access_Token = Console.ReadLine();
-            }
-            if (string.IsNullOrEmpty(Signature.Open_ID))
-            {
-                Console.WriteLine("Open_ID，Open_ID，或者直接回车跳过，选择“1.账号授权”Open_ID");
-
-                //Console.WriteLine("请输入Open_ID:");
-                //Signature.Open_ID = Console.ReadLine();
-            }
-
             AccessToken = Signature.Access_Token;
             OpenId = Signature.Open_ID;
         }
@@ -337,7 +332,7 @@ namespace OpenPlatformSample
                         string FilePath = Console.ReadLine();
                         Console.WriteLine("输入上传的预授权地址：");
                         string PreSignedURL = Console.ReadLine();
-                        Upload(FilePath, PreSignedURL);
+                        Upload(FilePath, PreSignedURL,"image/png");
                         break;
                     }
                 case "99":
@@ -821,9 +816,10 @@ namespace OpenPlatformSample
         /// </summary>
         /// <param name="FilePath"></param>
         /// <param name="PreSignedURL"></param>
-        public static void Upload(string FilePath,string PreSignedURL)
+        /// <param name="ContentType">文件类型</param>
+        public static void Upload(string FilePath,string PreSignedURL,string ContentType)
         {
-            tmp.UploadFileAsync(FilePath, PreSignedURL);
+            tmp.UploadFileAsync(FilePath, PreSignedURL, ContentType);
         } 
 
 

@@ -32,9 +32,12 @@ namespace OpenPlatformSample
                 // 反序列化为对象
                 SecurityConfig config = JsonSerializer.Deserialize<SecurityConfig>(jsonContent);
 
-                OpenPlatform_Signature.Signature.Client_ID = Signature.IsUAT ? config.UAT_Client_ID : config.PROD_Client_ID;
-                OpenPlatform_Signature.Signature.App_Secret = Signature.IsUAT ? config.UAT_App_Secret : config.PROD_App_Secret;
-                OpenPlatform_Signature.Signature.ReturnUrl = Signature.IsUAT ? config.UAT_ReturnUrl : config.PROD_ReturnUrl;
+                if (string.IsNullOrEmpty(Signature.Client_ID))
+                    OpenPlatform_Signature.Signature.Client_ID = Signature.IsUAT ? config.UAT_Client_ID : config.PROD_Client_ID;
+                if (string.IsNullOrEmpty(Signature.App_Secret))
+                    OpenPlatform_Signature.Signature.App_Secret = Signature.IsUAT ? config.UAT_App_Secret : config.PROD_App_Secret;
+                if (string.IsNullOrEmpty(Signature.ReturnUrl))
+                    OpenPlatform_Signature.Signature.ReturnUrl = Signature.IsUAT ? config.UAT_ReturnUrl : config.PROD_ReturnUrl;
                 OpenPlatform_Signature.Signature.Access_Token = Signature.IsUAT ? config.UAT_AccessToken : config.PROD_AccessToken;
                 OpenPlatform_Signature.Signature.Open_ID = Signature.IsUAT ? config.UAT_OpenId : config.PROD_OpenId;
                 return;
@@ -60,7 +63,7 @@ namespace OpenPlatformSample
         }
 
 
-        public static async Task<bool> UploadFileAsync(string filePath,string put_url)
+        public static async Task<bool> UploadFileAsync(string filePath,string put_url,string content_type = "application/octet-stream")
         {
             try
             {
@@ -74,12 +77,12 @@ namespace OpenPlatformSample
                     var fileContent = new ByteArrayContent(fileBytes);
 
                     // 设置 Content-Type
-                    fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
+                    fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(content_type);
 
                     // 构建请求头集合用于输出
                     var requestHeaders = new Dictionary<string, string>
                     {
-                        ["Content-Type"] = "application/octet-stream",
+                        ["Content-Type"] = content_type,
                         ["Content-Length"] = fileBytes.Length.ToString()
                     };
 
