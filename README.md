@@ -9,7 +9,7 @@
 该demo中提到的所有功能，都需要通过开放平台接入后，且相关用户授权完成后才能正确触发
 
 ## 环境要求
-`Visual Studio 2022 + dotnet8`
+`Visual Studio 2022以上 + dotnet8`
 
 ## 使用范围
 本签名示例的覆盖范围为[哔哩哔哩开放平台文档中心](https://open.bilibili.com/doc)中相关接口的签名实现，不包含[直播创作者服务中心](https://open-live.bilibili.com/document/bdb1a8e5-a675-5bfe-41a9-7a7163f75dbf#h1-u5E73u53F0u4ECBu7ECD)中的相关接口，请注意。
@@ -30,7 +30,7 @@
 然后根据需要，使用Sample中Main里的各项功能，**请注意，请根据自己的需求选择对应的函数启动，默认情况下，所有函数都在Main中，可能会造成冲突以及流程过长**
 
 ## 快速复用鉴权内容
-- 本Demo项目中使用了VS2022总`用户机密`进行敏感信息管理，如需快捷复用基础信息，可以在机密信息中填写内容方便使用。
+- 本Demo项目中使用了VS2022中的`用户机密`进行敏感信息管理，如需快捷复用基础信息，可以在机密信息中填写内容方便使用。
 ![f8cbf27278a31d9d76b63a67f176e43e](https://github.com/user-attachments/assets/845f772a-8dc2-4c01-8d61-0d6e5b785f2a)
 
 
