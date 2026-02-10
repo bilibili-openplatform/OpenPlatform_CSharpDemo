@@ -54,7 +54,7 @@ namespace OpenPlatformSample
             /*-------请将以上内容修改为对应的应用配置信息，如果需要使用`机密信息`or`配置文件，以上三个字符串变量请留空`--------*/
 
 
-            
+
             if (string.IsNullOrEmpty(Signature.Client_ID))
                 Signature.Client_ID = Signature.IsUAT ? Secrest["UAT_Client_ID"] : Secrest["PROD_Client_ID"];
             if (string.IsNullOrEmpty(Signature.App_Secret))
@@ -80,7 +80,7 @@ namespace OpenPlatformSample
 
 
 
-       
+
 
 
         //用于读取机密信息的接口对象
@@ -119,6 +119,7 @@ namespace OpenPlatformSample
                 Console.WriteLine("18.直播弹幕发送");
                 Console.WriteLine("19.用订单号查询课堂订单信息");
                 Console.WriteLine("20.电商获取文件预授权上传地址");
+                Console.WriteLine("21.AI创作者身份查询");
                 Console.Write("输入编号选择执行的demo功能：");
                 string code = Console.ReadLine();
                 Console.WriteLine("\r执行结果:");
@@ -138,19 +139,19 @@ namespace OpenPlatformSample
                 //测试计算签名
                 case "0":
                     {
-                    Console.WriteLine("请输入计算签名的Client_ID：");
-                    string Client_ID = Console.ReadLine();
-                    Console.WriteLine("请输入计算签名的App_Secret：");
-                    string App_Secret = Console.ReadLine();
-                    Console.WriteLine("请输入计算签名的Nonce：");
-                    string Nonce = Console.ReadLine();
-                    Console.WriteLine("请输入用于计算签名的body ReqJson或者已计算好的md5内容：");
-                    string ReqJson = Console.ReadLine();
-                    Console.WriteLine("请输入计算签名的TimeStamp：");
-                    string TimeStamp = Console.ReadLine();
-                    Console.WriteLine("计算签名结果：\n" + OpenPlatform_Signature.Signature.SignatureTest(Client_ID, App_Secret,Nonce,TimeStamp,ReqJson));
-                    break;
-                }
+                        Console.WriteLine("请输入计算签名的Client_ID：");
+                        string Client_ID = Console.ReadLine();
+                        Console.WriteLine("请输入计算签名的App_Secret：");
+                        string App_Secret = Console.ReadLine();
+                        Console.WriteLine("请输入计算签名的Nonce：");
+                        string Nonce = Console.ReadLine();
+                        Console.WriteLine("请输入用于计算签名的body ReqJson或者已计算好的md5内容：");
+                        string ReqJson = Console.ReadLine();
+                        Console.WriteLine("请输入计算签名的TimeStamp：");
+                        string TimeStamp = Console.ReadLine();
+                        Console.WriteLine("计算签名结果：\n" + OpenPlatform_Signature.Signature.SignatureTest(Client_ID, App_Secret, Nonce, TimeStamp, ReqJson));
+                        break;
+                    }
                 //账号授权（包含网页应用唤起，签名，授权，换取token）
                 case "1":
                     {
@@ -317,10 +318,19 @@ namespace OpenPlatformSample
                         Console.WriteLine("输入文件名：");
                         string name = Console.ReadLine();
                         Console.WriteLine("输入文件长度（buye）：");
-                        long size= long.Parse(Console.ReadLine());
+                        long size = long.Parse(Console.ReadLine());
                         Console.WriteLine("输入文件拓展名：");
                         string extension = Console.ReadLine();
                         market_get_upload_url(name, size, extension);
+                        break;
+                    }
+
+                // AI创作者身份查询
+                case "21":
+                    {
+                        Console.WriteLine("输入要查询的用户open_id：");
+                        string open_id = Console.ReadLine();
+                        copyright_ai_creator_verify(open_id);
                         break;
                     }
 
@@ -332,7 +342,7 @@ namespace OpenPlatformSample
                         string FilePath = Console.ReadLine();
                         Console.WriteLine("输入上传的预授权地址：");
                         string PreSignedURL = Console.ReadLine();
-                        Upload(FilePath, PreSignedURL,"image/png");
+                        Upload(FilePath, PreSignedURL, "image/png");
                         break;
                     }
                 case "99":
@@ -710,7 +720,7 @@ namespace OpenPlatformSample
         }
     ],
     ""source"": ""testm""
-}".Replace("$$$",open_id);
+}".Replace("$$$", open_id);
 
             var url = $"{Signature.MainDomain}/arcopen/fn/common/charge_order_search_list";
             var reqJson = json;
@@ -729,7 +739,7 @@ namespace OpenPlatformSample
         /// <param name="open_id">发送人的open_id</param>
         /// <param name="msg">发送的消息</param>
         /// <param name="reply_open_id">被@人的open_id</param>
-        public static void LiveDanmaSend(long room_id,string open_id, string msg,string reply_open_id)
+        public static void LiveDanmaSend(long room_id, string open_id, string msg, string reply_open_id)
         {
             Send_Danma_Class send_Danma_Class = new Send_Danma_Class
             {
@@ -751,6 +761,8 @@ namespace OpenPlatformSample
                 WriteLog(resp);
             }
         }
+
+
 
         /// <summary>
         /// 用订单号查询课堂订单信息（需单独联系申请权限）
@@ -780,7 +792,7 @@ namespace OpenPlatformSample
         /// <param name="name">文件名</param>
         /// <param name="size">文件大小</param>
         /// <param name="extension">文件拓展名</param>
-        public static void market_get_upload_url(string name, long size,string extension)
+        public static void market_get_upload_url(string name, long size, string extension)
         {
             var requestParameters = new Dictionary<string, object?>
             {
@@ -798,9 +810,38 @@ namespace OpenPlatformSample
             }
         }
 
+        /// <summary>
+        /// AI创作者身份查询
+        /// </summary>
+        /// <param name="name">文件名</param>
+        /// <param name="size">文件大小</param>
+        /// <param name="extension">文件拓展名</param>
+        public static void copyright_ai_creator_verify(string open_id)
+        {
+            var requestParameters = new Dictionary<string, object?>
+            {
+                { "open_id", open_id }
+            };
+
+            var url = $"{Signature.MainDomain}/arcopen/fn/common/copyright_ai_creator_verify";
+            var reqJson = JsonConvert.SerializeObject(requestParameters);
+            var resp = Signature.SendRequest(url, "POST", AccessToken, reqJson).Result;
+            try
+            {
+                if (JObject.Parse(resp)?["code"]?.ToString() == "0")
+                {
+                    WriteLog(resp);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("请求出错");
+            }
+        }
 
 
-        public static void test(string api_url,string json)
+
+        public static void test(string api_url, string json)
         {
             var url = $"{Signature.MainDomain}{api_url}";
             var reqJson = json;
@@ -817,10 +858,10 @@ namespace OpenPlatformSample
         /// <param name="FilePath"></param>
         /// <param name="PreSignedURL"></param>
         /// <param name="ContentType">文件类型</param>
-        public static void Upload(string FilePath,string PreSignedURL,string ContentType)
+        public static void Upload(string FilePath, string PreSignedURL, string ContentType)
         {
             tmp.UploadFileAsync(FilePath, PreSignedURL, ContentType);
-        } 
+        }
 
 
         public class Send_Danma_Class
@@ -828,6 +869,19 @@ namespace OpenPlatformSample
             public int source { get; set; } = 2;
             public long room_id { get; set; }
             public string open_id { get; set; }
+            public string msg { get; set; }
+            public ReplyInfo reply_info { get; set; } = new();
+            public class ReplyInfo
+            {
+                public string reply_open_id { get; set; }
+            }
+        }
+
+        public class Send_Danma_Class_2
+        {
+            public int source { get; set; } = 2;
+            public long room_id { get; set; }
+            public long uid { get; set; }
             public string msg { get; set; }
             public ReplyInfo reply_info { get; set; } = new();
             public class ReplyInfo
