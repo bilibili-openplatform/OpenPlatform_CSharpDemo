@@ -186,39 +186,39 @@ namespace OpenPlatform_LiveRoomData.Runtime
             {
                 switch (json["cmd"]?.ToString())
                 {
-                    case "LIVE_OPEN_PLATFORM_DM":
+                    case "OPEN_LIVEROOM_DM":
                         var dm = JsonConvert.DeserializeObject<Dm>(data);
                         OnDanmaku?.Invoke(dm);
                         break;
-                    case "LIVE_OPEN_PLATFORM_SUPER_CHAT":
+                    case "OPEN_LIVEROOM_SUPER_CHAT":
                         var superChat = JsonConvert.DeserializeObject<SuperChat>(data);
                         OnSuperChat?.Invoke(superChat);
                         break;
-                    case "LIVE_OPEN_PLATFORM_SUPER_CHAT_DEL":
+                    case "OPEN_LIVEROOM_SUPER_CHAT_DEL":
                         var superChatDel = JsonConvert.DeserializeObject<SuperChatDel>(data);
                         OnSuperChatDel?.Invoke(superChatDel);
                         break;
-                    case "LIVE_OPEN_PLATFORM_SEND_GIFT":
+                    case "OPEN_LIVEROOM_SEND_GIFT":
                         var gift = JsonConvert.DeserializeObject<SendGift>(data);
                         OnGift?.Invoke(gift);
                         break;
-                    case "LIVE_OPEN_PLATFORM_GUARD":
+                    case "OPEN_LIVEROOM_GUARD":
                         var guard = JsonConvert.DeserializeObject<Guard>(data);
                         OnGuardBuy?.Invoke(guard);
                         break;
-                    case "LIVE_OPEN_PLATFORM_LIKE":
+                    case "OPEN_LIVEROOM_LIKE":
                         var like = JsonConvert.DeserializeObject<Like>(data);
                         OnLike?.Invoke(like);
                         break;
-                    case "LIVE_OPEN_PLATFORM_LIVE_ROOM_ENTER":
+                    case "OPEN_LIVEROOM_LIVE_ROOM_ENTER":
                         var enter = JsonConvert.DeserializeObject<Enter>(data);
                         OnEnter?.Invoke(enter);
                         break;
-                    case "LIVE_OPEN_PLATFORM_LIVE_START":
+                    case "OPEN_LIVEROOM_LIVE_START":
                         var live_start = JsonConvert.DeserializeObject<LiveStart>(data);
                         OnLiveStart?.Invoke(live_start);
                         break;
-                    case "LIVE_OPEN_PLATFORM_LIVE_END":
+                    case "OPEN_LIVEROOM_LIVE_END":
                         var live_end = JsonConvert.DeserializeObject<LiveEnd>(data);
                         OnLiveEnd?.Invoke(live_end);
                         break;

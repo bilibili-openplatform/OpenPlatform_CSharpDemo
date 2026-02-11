@@ -877,19 +877,6 @@ namespace OpenPlatformSample
             }
         }
 
-        public class Send_Danma_Class_2
-        {
-            public int source { get; set; } = 2;
-            public long room_id { get; set; }
-            public long uid { get; set; }
-            public string msg { get; set; }
-            public ReplyInfo reply_info { get; set; } = new();
-            public class ReplyInfo
-            {
-                public string reply_open_id { get; set; }
-            }
-        }
-
 
         private static void WriteLog(string response)
         {
